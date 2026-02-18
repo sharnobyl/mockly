@@ -1685,7 +1685,7 @@ function liveUpdate(){
         imgEl.style.height = displayH + 'px';
         imgEl.style.marginLeft = (w - displayW) / 2 + 'px';
         imgEl.style.marginTop = (h - displayH) / 2 + 'px';
-        imgEl.style.objectFit = 'none';
+        imgEl.style.objectFit = 'fill';
 
         // Max offset = half of (scaled image size - container size)
         const maxOffsetX = Math.max(0, (displayW * imgZoom - w) / 2);
