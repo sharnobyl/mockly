@@ -314,6 +314,34 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   background:repeating-conic-gradient(#2a2a2a 0% 25%,#242424 0% 50%) 0 0/16px 16px;
 }
 
+/* Mobile: Preview at top */
+@media (max-width: 768px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px auto auto;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .controls {
+    order: 2;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    overflow-y: visible;
+    max-height: none;
+  }
+  .preview-area {
+    order: 1;
+    padding: 16px;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
 /* Markdown styles in card */
 .card-text strong { font-weight: 700; }
 .card-text em { font-style: italic; }
@@ -1264,6 +1292,10 @@ function adjustValue(key, delta) {
   sizes[key] = Math.max(limit.min, Math.min(limit.max, sizes[key] + delta));
   updateStepperUI(key);
   syncSliderToState(key);
+  // Update card width/height directly when adjusting
+  if (key === 'width') {
+    document.getElementById('card').style.width = sizes.width + 'px';
+  }
   liveUpdate();
 }
 
@@ -1370,6 +1402,23 @@ function makeInitialsAvatar(name, fg, bg, size){
   x.fillStyle=fg; x.font=`bold ${canvasSize * 0.33}px "DM Sans",sans-serif`;
   x.textAlign='center'; x.textBaseline='middle'; x.fillText(ini,canvasSize/2,canvasSize/2 + 1);
   return c.toDataURL();
+}
+
+// Scale card to fit viewport on mobile
+function scaleCardForMobile() {
+  const card = document.getElementById('card');
+  const previewArea = document.querySelector('.preview-area');
+  if (window.innerWidth <= 768) {
+    const availableWidth = previewArea.clientWidth - 32;
+    const cardWidth = card.offsetWidth;
+    const scale = Math.min(1, availableWidth / cardWidth);
+    card.style.transform = `scale(${scale})`;
+    card.style.transformOrigin = 'top center';
+    previewArea.style.minHeight = (card.offsetHeight * scale) + 32 + 'px';
+  } else {
+    card.style.transform = '';
+    previewArea.style.minHeight = '';
+  }
 }
 
 // Live update
@@ -1512,6 +1561,11 @@ function liveUpdate(){
   // Fixed height
   card.style.height   = sizes.height > 0 ? sizes.height + 'px' : 'auto';
   card.style.overflow = 'hidden';
+
+  // Scale for mobile after DOM updates
+  if (typeof scaleCardForMobile === 'function') {
+    requestAnimationFrame(scaleCardForMobile);
+  }
 }
 
 // Size / presets
@@ -1653,6 +1707,10 @@ async function copyCard(){
 document.getElementById('card').style.width = sizes.width + 'px';
 initColorPickers();
 liveUpdate();
+
+// Initialize mobile scaling
+window.addEventListener('resize', scaleCardForMobile);
+scaleCardForMobile();
 </script>
 </body>
 </html>
