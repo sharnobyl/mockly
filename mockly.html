@@ -16,7 +16,7 @@ body {
   background: var(--bg); color: var(--text);
   font-family: 'DM Sans', sans-serif;
   display: grid;
-  grid-template-columns: 370px 1fr;
+  grid-template-columns: 400px 1fr;
   grid-template-rows: 52px 1fr;
   height: 100vh; overflow: hidden;
 }
@@ -41,6 +41,50 @@ header h1 span { color: var(--accent); }
   letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);
   margin:14px 0 5px; }
 .sec:first-child { margin-top:0; }
+
+/* Control row with label + steppers */
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.ctrl-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.ctrl-steppers {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.stepper-btn {
+  width: 22px; height: 22px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+}
+.stepper-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.stepper-btn.reset {
+  font-size: 10px;
+}
+.stepper-val {
+  min-width: 36px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text);
+}
+
 label { font-size:11px; color:var(--muted); display:block; margin-bottom:3px; }
 input[type=text], textarea, select {
   width:100%; background:var(--bg); border:1px solid var(--border);
@@ -69,11 +113,18 @@ input[type=color] {
 }
 input[type=color]::-webkit-color-swatch-wrapper{padding:0;border-radius:4px}
 input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 .upload-btn {
-  width:100%; background:var(--bg); border:1px dashed var(--border);
+  flex: 1;
+  background:var(--bg); border:1px dashed var(--border);
   border-radius:7px; color:var(--muted); font-family:'DM Sans',sans-serif;
   font-size:11.5px; padding:8px; cursor:pointer; text-align:center;
-  transition:all .15s; margin-bottom:8px;
+  transition:all .15s;
 }
 .upload-btn:hover { border-color:var(--accent); color:var(--accent); }
 .upload-btn.has-file { border-color:#4ade80; color:#4ade80; border-style:solid; }
@@ -120,7 +171,23 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   background:repeating-conic-gradient(#1a1a22 0% 25%,#161620 0% 50%) 0 0/20px 20px;
 }
 
-/* ── THE CARD ── */
+/* Markdown styles in card */
+.card-text strong { font-weight: 700; }
+.card-text em { font-style: italic; }
+.card-text code {
+  background: rgba(0,0,0,0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+.card-text a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.5);
+}
+
+/* THE CARD */
 #card {
   border-radius:16px; overflow:hidden;
   box-shadow:0 20px 60px rgba(0,0,0,.6);
@@ -162,7 +229,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   <div class="badge">Studio</div>
 </header>
 
-<!-- ── CONTROLS ── -->
+<!-- CONTROLS -->
 <div class="controls">
 
   <div class="sec">Platform Presets</div>
@@ -175,23 +242,62 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   </div>
 
   <div class="sec">Canvas Size</div>
-  <div class="slider-group">
-    <label>Width <span id="w-val">516</span>px</label>
-    <input type="range" id="w-range" min="300" max="900" value="516" oninput="onSizeChange()">
+  <div class="ctrl-row">
+    <span class="ctrl-label">Width</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('width', -10)">−</button>
+      <span class="stepper-val" id="w-val">516px</span>
+      <button class="stepper-btn" onclick="adjustValue('width', 10)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('width')">↺</button>
+    </div>
   </div>
-  <div class="slider-group">
-    <label>Height <span id="h-val">auto</span></label>
-    <input type="range" id="h-range" min="0" max="900" value="0" oninput="onSizeChange()">
-    <div style="font-size:10px;opacity:.5;margin-top:2px">0 = auto-height</div>
+  <input type="range" id="w-range" min="300" max="900" value="516" oninput="onSizeChange()">
+  <div class="ctrl-row">
+    <span class="ctrl-label">Height</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('height', -10)">−</button>
+      <span class="stepper-val" id="h-val">auto</span>
+      <button class="stepper-btn" onclick="adjustValue('height', 10)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('height')">↺</button>
+    </div>
   </div>
+  <input type="range" id="h-range" min="0" max="900" value="0" oninput="onSizeChange()">
+  <div style="font-size:10px;opacity:.5;margin-bottom:8px">0 = auto-height</div>
 
   <div class="sec">Profile</div>
-  <button class="upload-btn" id="avatar-btn" onclick="document.getElementById('avatar-upload').click()">↑ Upload avatar</button>
+  <div class="upload-row">
+    <button class="upload-btn" id="avatar-btn" onclick="document.getElementById('avatar-upload').click()">↑ Upload avatar</button>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('avatarSize', -2)">−</button>
+      <span class="stepper-val" id="avatar-size-val">40</span>
+      <button class="stepper-btn" onclick="adjustValue('avatarSize', 2)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('avatarSize')">↺</button>
+    </div>
+  </div>
   <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="handleAvatar(event)">
-  <label>Display Name</label>
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Display Name</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('nameSize', -0.5)">−</button>
+      <span class="stepper-val" id="name-size-val">14.5</span>
+      <button class="stepper-btn" onclick="adjustValue('nameSize', 0.5)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('nameSize')">↺</button>
+    </div>
+  </div>
   <input type="text" id="name-input" value="Patent Press" oninput="liveUpdate()">
-  <label>Handle</label>
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Handle</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('handleSize', -0.5)">−</button>
+      <span class="stepper-val" id="handle-size-val">13</span>
+      <button class="stepper-btn" onclick="adjustValue('handleSize', 0.5)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('handleSize')">↺</button>
+    </div>
+  </div>
   <input type="text" id="handle-input" value="@patent.press" oninput="liveUpdate()">
+
   <label>Verified Badge</label>
   <select id="verified-select" onchange="liveUpdate()">
     <option value="blue">Blue ✓</option>
@@ -200,9 +306,26 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   </select>
 
   <div class="sec">Content</div>
-  <label>Headline</label>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Headline</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('titleSize', -1)">−</button>
+      <span class="stepper-val" id="title-size-val">18</span>
+      <button class="stepper-btn" onclick="adjustValue('titleSize', 1)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('titleSize')">↺</button>
+    </div>
+  </div>
   <input type="text" id="title-input" value="AI takes the wheel" oninput="liveUpdate()">
-  <label>Body (one paragraph per line)</label>
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Body (supports **bold**, *italic*, `code`, [link](url))</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('bodySize', -0.5)">−</button>
+      <span class="stepper-val" id="body-size-val">14.5</span>
+      <button class="stepper-btn" onclick="adjustValue('bodySize', 0.5)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('bodySize')">↺</button>
+    </div>
+  </div>
   <textarea id="body-input" oninput="liveUpdate()">Strong Force's new patent envisions cars that know your feelings.
 Sensors track your heartbeat, sweat, voice stress and cabin humidity. AI fuses this with driving data to track your emotive state.
 It can blast air, adjust lights, or even take control of the wheel.</textarea>
@@ -231,21 +354,27 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
     Rounded image corners
   </label>
 
-  <div class="slider-group" style="margin-top:8px">
-    <label>Image Inset <span id="inset-val">10</span>px
-      <span style="font-size:9px;opacity:.45">0=flush · 24=tweet</span>
-    </label>
-    <input type="range" id="inset-range" min="0" max="24" value="10" oninput="liveUpdate()">
+  <div class="ctrl-row" style="margin-top:8px">
+    <span class="ctrl-label">Image Inset</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('inset', -1)">−</button>
+      <span class="stepper-val" id="inset-val">10</span>
+      <button class="stepper-btn" onclick="adjustValue('inset', 1)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('inset')">↺</button>
+    </div>
   </div>
+  <input type="range" id="inset-range" min="0" max="24" value="10" oninput="liveUpdate()">
 
   <div class="sec">Style</div>
   <div class="color-row">
     <input type="color" id="bg-color" value="#2d49b8" oninput="liveUpdate()">
-    <label style="margin:0">Background</label>
+    <label style="margin:0;flex:1">Background</label>
+    <button class="stepper-btn reset" onclick="resetValue('bgColor')">↺</button>
   </div>
   <div class="color-row">
     <input type="color" id="text-color" value="#ffffff" oninput="liveUpdate()">
-    <label style="margin:0">Text color</label>
+    <label style="margin:0;flex:1">Text color</label>
+    <button class="stepper-btn reset" onclick="resetValue('textColor')">↺</button>
   </div>
   <label>Font</label>
   <select id="font-select" onchange="liveUpdate()">
@@ -255,10 +384,17 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
     <option value="syne">Syne (Geometric)</option>
     <option value="dmsans">DM Sans (Clean)</option>
   </select>
-  <div class="slider-group">
-    <label>Corner Radius <span id="radius-val">16</span>px</label>
-    <input type="range" id="radius-range" min="0" max="40" value="16" oninput="liveUpdate()">
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Corner Radius</span>
+    <div class="ctrl-steppers">
+      <button class="stepper-btn" onclick="adjustValue('cornerRadius', -1)">−</button>
+      <span class="stepper-val" id="radius-val">16</span>
+      <button class="stepper-btn" onclick="adjustValue('cornerRadius', 1)">+</button>
+      <button class="stepper-btn reset" onclick="resetValue('cornerRadius')">↺</button>
+    </div>
   </div>
+  <input type="range" id="radius-range" min="0" max="40" value="16" oninput="liveUpdate()">
 
   <div class="export-group">
     <button class="export-btn primary" onclick="exportCard('png')">⬇ Download PNG</button>
@@ -267,7 +403,7 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
   </div>
 </div>
 
-<!-- ── PREVIEW ── -->
+<!-- PREVIEW -->
 <div class="preview-area">
   <div id="card">
     <!-- top image slot -->
@@ -310,7 +446,34 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script>
-// ── State ──────────────────────────────────────────────────────────────
+// DEFAULTS
+const DEFAULTS = {
+  width: 516,
+  height: 0,
+  nameSize: 14.5,
+  handleSize: 13,
+  titleSize: 18,
+  bodySize: 14.5,
+  avatarSize: 40,
+  cornerRadius: 16,
+  inset: 10,
+  bgColor: '#2d49b8',
+  textColor: '#ffffff'
+};
+
+// Current state (sizes)
+const sizes = {
+  nameSize: DEFAULTS.nameSize,
+  handleSize: DEFAULTS.handleSize,
+  titleSize: DEFAULTS.titleSize,
+  bodySize: DEFAULTS.bodySize,
+  avatarSize: DEFAULTS.avatarSize,
+  cornerRadius: DEFAULTS.cornerRadius,
+  inset: DEFAULTS.inset,
+  width: DEFAULTS.width,
+  height: DEFAULTS.height
+};
+
 let avatarDataURL  = null;
 let cardImgDataURL = null;
 let imgPosition    = 'bottom';
@@ -332,35 +495,151 @@ const FONT_CSS = {
   dmsans:  "'DM Sans',sans-serif",
 };
 
+// Sizing limits
+const LIMITS = {
+  nameSize: { min: 10, max: 24, step: 0.5 },
+  handleSize: { min: 10, max: 20, step: 0.5 },
+  titleSize: { min: 12, max: 32, step: 1 },
+  bodySize: { min: 10, max: 24, step: 0.5 },
+  avatarSize: { min: 24, max: 64, step: 2 },
+  cornerRadius: { min: 0, max: 40, step: 1 },
+  inset: { min: 0, max: 24, step: 1 },
+  width: { min: 300, max: 900, step: 10 },
+  height: { min: 0, max: 900, step: 10 }
+};
+
 function gv(id){ return document.getElementById(id).value; }
 function ratioNum(r){ const [a,b]=r.split('/').map(Number); return a/b; }
 
-function makeInitialsAvatar(name, fg, bg){
-  const c=document.createElement('canvas'); c.width=c.height=84;
+// Stepper functions
+function adjustValue(key, delta) {
+  const limit = LIMITS[key];
+  sizes[key] = Math.max(limit.min, Math.min(limit.max, sizes[key] + delta));
+  updateStepperUI(key);
+  syncSliderToState(key);
+  liveUpdate();
+}
+
+function resetValue(key) {
+  if (key === 'bgColor') {
+    document.getElementById('bg-color').value = DEFAULTS.bgColor;
+    liveUpdate();
+    return;
+  }
+  if (key === 'textColor') {
+    document.getElementById('text-color').value = DEFAULTS.textColor;
+    liveUpdate();
+    return;
+  }
+  sizes[key] = DEFAULTS[key];
+  updateStepperUI(key);
+  syncSliderToState(key);
+  liveUpdate();
+}
+
+function updateStepperUI(key) {
+  const valEl = document.getElementById(keyToValId(key));
+  if (valEl) {
+    let display = sizes[key];
+    if (key === 'width') {
+      valEl.textContent = display + 'px';
+    } else if (key === 'height') {
+      valEl.textContent = display === 0 ? 'auto' : display + 'px';
+    } else {
+      valEl.textContent = display;
+    }
+  }
+}
+
+function keyToValId(key) {
+  const map = {
+    nameSize: 'name-size-val',
+    handleSize: 'handle-size-val',
+    titleSize: 'title-size-val',
+    bodySize: 'body-size-val',
+    avatarSize: 'avatar-size-val',
+    cornerRadius: 'radius-val',
+    inset: 'inset-val',
+    width: 'w-val',
+    height: 'h-val'
+  };
+  return map[key];
+}
+
+function keyToRangeId(key) {
+  const map = {
+    cornerRadius: 'radius-range',
+    inset: 'inset-range',
+    width: 'w-range',
+    height: 'h-range'
+  };
+  return map[key];
+}
+
+function syncSliderToState(key) {
+  const rangeId = keyToRangeId(key);
+  if (rangeId) {
+    const range = document.getElementById(rangeId);
+    if (range) range.value = sizes[key];
+  }
+}
+
+// Markdown parser (basic)
+function parseMarkdown(text) {
+  return text
+    // Escape HTML
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Links: [text](url)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    // Bold: **text** or __text__
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+    // Italic: *text* or _text_
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>')
+    // Code: `text`
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function makeInitialsAvatar(name, fg, bg, size){
+  const c=document.createElement('canvas');
+  const canvasSize = size * 2;
+  c.width=c.height=canvasSize;
   const x=c.getContext('2d');
-  x.fillStyle=bg; x.beginPath(); x.arc(42,42,42,0,Math.PI*2); x.fill();
+  x.fillStyle=bg; x.beginPath(); x.arc(canvasSize/2,canvasSize/2,canvasSize/2,0,Math.PI*2); x.fill();
   const ini=(name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  x.fillStyle=fg; x.font='bold 28px "DM Sans",sans-serif';
-  x.textAlign='center'; x.textBaseline='middle'; x.fillText(ini,42,43);
+  x.fillStyle=fg; x.font=`bold ${canvasSize * 0.33}px "DM Sans",sans-serif`;
+  x.textAlign='center'; x.textBaseline='middle'; x.fillText(ini,canvasSize/2,canvasSize/2 + 1);
   return c.toDataURL();
 }
 
-// ── Live update ────────────────────────────────────────────────────────
+// Live update
 function liveUpdate(){
   const bg       = gv('bg-color');
   const textCol  = gv('text-color');
   const fontKey  = gv('font-select');
   const verified = gv('verified-select');
-  const radius   = gv('radius-range');
-  const inset    = parseInt(gv('inset-range'));
   const rounded  = document.getElementById('rounded-img-check').checked;
   const name     = gv('name-input');
   const handle   = gv('handle-input');
   const title    = gv('title-input');
   const body     = gv('body-input');
 
+  // Update display values from sliders
+  const insetFromSlider = parseInt(gv('inset-range'));
+  const radiusFromSlider = parseInt(gv('radius-range'));
+  sizes.inset = insetFromSlider;
+  sizes.cornerRadius = radiusFromSlider;
+  updateStepperUI('inset');
+  updateStepperUI('cornerRadius');
+
+  const inset = sizes.inset;
+  const radius = sizes.cornerRadius;
+
+  document.getElementById('inset-val').textContent = inset;
   document.getElementById('radius-val').textContent = radius;
-  document.getElementById('inset-val').textContent  = inset;
 
   // Card base styles
   const card = document.getElementById('card');
@@ -369,21 +648,34 @@ function liveUpdate(){
   card.style.fontFamily   = FONT_CSS[fontKey];
   card.style.borderRadius = radius + 'px';
 
-  // Text content
-  document.getElementById('display-name').textContent   = name;
-  document.getElementById('display-handle').textContent = handle;
+  // Avatar size
+  const avatarEl = document.getElementById('avatar-display');
+  avatarEl.style.width = sizes.avatarSize + 'px';
+  avatarEl.style.height = sizes.avatarSize + 'px';
+
+  // Text content with sizes
+  const nameEl = document.getElementById('display-name');
+  nameEl.textContent = name;
+  nameEl.style.fontSize = sizes.nameSize + 'px';
+
+  const handleEl = document.getElementById('display-handle');
+  handleEl.textContent = handle;
+  handleEl.style.fontSize = sizes.handleSize + 'px';
 
   const titleEl = document.getElementById('display-title');
-  titleEl.textContent = title;
-  titleEl.style.fontWeight   = '800';
-  titleEl.style.fontSize     = '18px';
+  titleEl.innerHTML = parseMarkdown(title);
+  titleEl.style.fontWeight = '800';
+  titleEl.style.fontSize = sizes.titleSize + 'px';
   titleEl.style.marginBottom = '10px';
-  titleEl.style.lineHeight   = '1.3';
+  titleEl.style.lineHeight = '1.3';
 
   const bodyEl = document.getElementById('display-body');
   bodyEl.innerHTML = '';
   body.split('\n').filter(l=>l.trim()).forEach(line=>{
-    const p=document.createElement('p'); p.textContent=line; bodyEl.appendChild(p);
+    const p=document.createElement('p');
+    p.innerHTML = parseMarkdown(line);
+    p.style.fontSize = sizes.bodySize + 'px';
+    bodyEl.appendChild(p);
   });
 
   // Verified badge
@@ -396,19 +688,18 @@ function liveUpdate(){
 
   // Avatar
   if(!avatarDataURL)
-    document.getElementById('avatar-display').src = makeInitialsAvatar(name, textCol, bg);
+    avatarEl.src = makeInitialsAvatar(name, textCol, bg, sizes.avatarSize);
 
-  // Image slots — show correct one
+  // Image slots
   const slotTop    = document.getElementById('img-slot-top');
   const slotBottom = document.getElementById('img-slot-bottom');
   slotTop.style.display    = imgPosition==='top'    ? 'block' : 'none';
   slotBottom.style.display = imgPosition==='bottom' ? 'block' : 'none';
 
   // Compute image height from card width & ratio
-  const cardW = card.offsetWidth || parseInt(gv('w-range'));
+  const cardW = card.offsetWidth || sizes.width;
   const ratio  = ratioNum(imgRatio);
 
-  // Full-width minus inset on sides
   const slotW   = cardW - inset * 2;
   const slotH   = Math.round(slotW / ratio);
 
@@ -449,18 +740,17 @@ function liveUpdate(){
   }
 
   // Fixed height
-  const fixedH = parseInt(gv('h-range'));
-  card.style.height   = fixedH > 0 ? fixedH + 'px' : 'auto';
+  card.style.height   = sizes.height > 0 ? sizes.height + 'px' : 'auto';
   card.style.overflow = 'hidden';
 }
 
-// ── Size / presets ─────────────────────────────────────────────────────
+// Size / presets
 function onSizeChange(){
-  const w = parseInt(gv('w-range'));
-  const h = parseInt(gv('h-range'));
-  document.getElementById('w-val').textContent = w;
-  document.getElementById('h-val').textContent = h > 0 ? h+'px' : 'auto';
-  document.getElementById('card').style.width = w + 'px';
+  sizes.width = parseInt(gv('w-range'));
+  sizes.height = parseInt(gv('h-range'));
+  updateStepperUI('width');
+  updateStepperUI('height');
+  document.getElementById('card').style.width = sizes.width + 'px';
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
   liveUpdate();
 }
@@ -470,10 +760,12 @@ document.querySelectorAll('.preset-btn').forEach(btn=>{
     document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const p = PLATFORM_PRESETS[btn.dataset.preset];
+    sizes.width = p.w;
+    sizes.height = p.h;
     document.getElementById('w-range').value = p.w;
     document.getElementById('h-range').value = p.h;
-    document.getElementById('w-val').textContent = p.w;
-    document.getElementById('h-val').textContent = p.h > 0 ? p.h+'px' : 'auto';
+    updateStepperUI('width');
+    updateStepperUI('height');
     document.getElementById('card').style.width = p.w + 'px';
     liveUpdate();
   });
@@ -497,7 +789,7 @@ document.querySelectorAll('.aspect-opt').forEach(btn=>{
   });
 });
 
-// ── File handlers ──────────────────────────────────────────────────────
+// File handlers
 function handleAvatar(e){
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
@@ -522,7 +814,7 @@ function handleCardImage(e){
   r.readAsDataURL(file);
 }
 
-// ── Export ─────────────────────────────────────────────────────────────
+// Export
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -576,8 +868,7 @@ async function copyCard(){
   }catch(e){console.error(e);showToast('⚠ Clipboard blocked — try downloading');}
 }
 
-// ── Init ───────────────────────────────────────────────────────────────
-// Inline Google Fonts CSS to avoid CORS issues with html-to-image export
+// Init
 (async function(){
   const link = document.querySelector('link[href*="fonts.googleapis.com"]');
   if(!link) return;
@@ -589,7 +880,7 @@ async function copyCard(){
   }catch(e){ console.warn('Could not inline Google Fonts CSS:', e); }
 })();
 
-document.getElementById('card').style.width='516px';
+document.getElementById('card').style.width = sizes.width + 'px';
 liveUpdate();
 </script>
 </body>
