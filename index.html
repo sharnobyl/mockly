@@ -1835,11 +1835,11 @@ function resetAll() {
     updateColorPickerUI(prefix);
   });
 
-  // Reset form inputs
-  sv('name-input', '');
-  sv('handle-input', '');
-  sv('title-input', '');
-  sv('body-input', '');
+  // Reset form inputs to original defaults
+  sv('name-input', 'Mockly');
+  sv('handle-input', '@mockly.app');
+  sv('title-input', 'Create beautiful social cards');
+  sv('body-input', 'Design Twitter/X-style social cards in seconds.');
   sv('font-select', 'syne');
   sv('verified-select', 'none');
   document.getElementById('rounded-img-check').checked = false;
