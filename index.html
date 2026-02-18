@@ -973,6 +973,7 @@ const LIMITS = {
 };
 
 function gv(id){ return document.getElementById(id).value; }
+function sv(id, val){ document.getElementById(id).value = val; }
 function ratioNum(r){ const [a,b]=r.split('/').map(Number); return a/b; }
 
 // ============ COLOR PICKER ============
