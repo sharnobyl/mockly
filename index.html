@@ -1808,63 +1808,8 @@ function restoreState() {
 }
 
 function resetAll() {
-  // Clear localStorage
   localStorage.removeItem(STORAGE_KEY);
-
-  // Reset sizes to defaults
-  Object.assign(sizes, {
-    nameSize: DEFAULTS.nameSize,
-    handleSize: DEFAULTS.handleSize,
-    titleSize: DEFAULTS.titleSize,
-    bodySize: DEFAULTS.bodySize,
-    avatarSize: DEFAULTS.avatarSize,
-    cornerRadius: DEFAULTS.cornerRadius,
-    inset: DEFAULTS.inset,
-    width: DEFAULTS.width,
-    height: DEFAULTS.height
-  });
-
-  // Reset color pickers
-  colorPickerState.bg = { hex: '#000000', h: 0, s: 0, l: 0, a: 100 };
-  colorPickerState.name = { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 };
-  colorPickerState.handle = { hex: '#999999', h: 0, s: 0, l: 60, a: 100 };
-  colorPickerState.headline = { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 };
-  colorPickerState.body = { hex: '#e0e0e0', h: 0, s: 0, l: 88, a: 100 };
-
-  ['bg', 'name', 'handle', 'headline', 'body'].forEach(prefix => {
-    updateColorPickerUI(prefix);
-  });
-
-  // Reset form inputs to original defaults
-  sv('name-input', 'Mockly');
-  sv('handle-input', '@mockly.app');
-  sv('title-input', 'Create beautiful social cards');
-  sv('body-input', 'Design Twitter/X-style social cards in seconds.');
-  sv('font-select', 'syne');
-  sv('verified-select', 'none');
-  document.getElementById('rounded-img-check').checked = false;
-  document.getElementById('show-img-check').checked = true;
-
-  // Reset sliders
-  sv('inset-range', DEFAULTS.inset);
-  sv('radius-range', DEFAULTS.cornerRadius);
-
-  // Reset images
-  avatarDataURL = null;
-  cardImgDataURL = null;
-  imgPosition = 'bottom';
-  imgRatio = '16/9';
-  document.getElementById('avatar-display').src = '';
-  const cardImg = document.getElementById('card-image');
-  cardImg.src = '';
-  cardImg.style.display = 'none';
-
-  // Reset card width
-  document.getElementById('card').style.width = DEFAULTS.width + 'px';
-
-  // Update everything
-  liveUpdate();
-  showToast('Reset to defaults');
+  location.reload();
 }
 
 // Init
