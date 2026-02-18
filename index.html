@@ -302,6 +302,10 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   transition:all .12s; font-family:'DM Sans',sans-serif;
 }
 .aspect-opt:hover, .aspect-opt.active { border-color:var(--accent); color:var(--accent); }
+.aspect-opt.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .img-fit-opts { display:flex; gap:5px; margin-bottom:8px; }
 .fit-opt {
   flex:1; padding:6px 8px; font-size:11px; border:1px solid var(--border);
@@ -1623,6 +1627,12 @@ function liveUpdate(){
   // Show/hide zoom controls based on image and fit mode
   const zoomControls = document.getElementById('zoom-controls');
   zoomControls.style.display = (cardImgDataURL && showImg && imgFit === 'cover') ? 'flex' : 'none';
+
+  // Disable aspect ratio buttons in contain mode
+  const usingNaturalRatio = imgFit === 'contain' && imgNaturalW > 0 && imgNaturalH > 0;
+  document.querySelectorAll('.aspect-opt').forEach(btn => {
+    btn.classList.toggle('disabled', usingNaturalRatio);
+  });
 
   if (!showImg) {
     slotTop.style.display = 'none';
