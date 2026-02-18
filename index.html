@@ -1567,6 +1567,9 @@ function liveUpdate(){
   if (typeof scaleCardForMobile === 'function') {
     requestAnimationFrame(scaleCardForMobile);
   }
+
+  // Persist state to localStorage
+  saveState();
 }
 
 // Size / presets
@@ -1693,6 +1696,100 @@ async function copyCard(){
   }catch(e){console.error(e);showToast('⚠ Clipboard blocked — try downloading');}
 }
 
+// State persistence
+const STORAGE_KEY = 'mockly-state';
+
+function saveState() {
+  const state = {
+    inputs: {
+      name: gv('name-input'),
+      handle: gv('handle-input'),
+      title: gv('title-input'),
+      body: gv('body-input'),
+      font: gv('font-select'),
+      verified: gv('verified-select'),
+      rounded: document.getElementById('rounded-img-check').checked,
+      showImg: document.getElementById('show-img-check').checked
+    },
+    colors: colorPickerState,
+    sizes: { ...sizes },
+    images: {
+      avatar: avatarDataURL,
+      cardImg: cardImgDataURL,
+      position: imgPosition,
+      ratio: imgRatio
+    },
+    sliders: {
+      inset: gv('inset-range'),
+      radius: gv('radius-range')
+    }
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function restoreState() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return false;
+
+  try {
+    const state = JSON.parse(saved);
+
+    // Restore text inputs
+    if (state.inputs) {
+      sv('name-input', state.inputs.name || '');
+      sv('handle-input', state.inputs.handle || '');
+      sv('title-input', state.inputs.title || '');
+      sv('body-input', state.inputs.body || '');
+      sv('font-select', state.inputs.font || 'syne');
+      sv('verified-select', state.inputs.verified || 'none');
+      document.getElementById('rounded-img-check').checked = state.inputs.rounded || false;
+      document.getElementById('show-img-check').checked = state.inputs.showImg !== false;
+    }
+
+    // Restore colors
+    if (state.colors) {
+      ['bg', 'name', 'handle', 'headline', 'body'].forEach(prefix => {
+        if (state.colors[prefix]) {
+          Object.assign(colorPickerState[prefix], state.colors[prefix]);
+          updateColorPickerUI(prefix);
+        }
+      });
+    }
+
+    // Restore sizes
+    if (state.sizes) {
+      Object.assign(sizes, state.sizes);
+    }
+
+    // Restore sliders
+    if (state.sliders) {
+      sv('inset-range', state.sliders.inset || sizes.inset);
+      sv('radius-range', state.sliders.radius || sizes.cornerRadius);
+    }
+
+    // Restore images
+    if (state.images) {
+      avatarDataURL = state.images.avatar;
+      cardImgDataURL = state.images.cardImg;
+      imgPosition = state.images.position || 'bottom';
+      imgRatio = state.images.ratio || '16/9';
+
+      if (avatarDataURL) {
+        document.getElementById('avatar-display').src = avatarDataURL;
+      }
+      if (cardImgDataURL) {
+        document.getElementById('card-image').src = cardImgDataURL;
+        document.getElementById('card-image').style.display = 'block';
+      }
+    }
+
+    return true;
+  } catch (e) {
+    console.warn('Could not restore state:', e);
+    return false;
+  }
+}
+
 // Init
 (async function(){
   const link = document.querySelector('link[href*="fonts.googleapis.com"]');
@@ -1707,6 +1804,7 @@ async function copyCard(){
 
 document.getElementById('card').style.width = sizes.width + 'px';
 initColorPickers();
+restoreState();
 liveUpdate();
 
 // Initialize mobile scaling
