@@ -215,7 +215,6 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
   <div class="img-options">
     <button class="img-opt active" data-pos="bottom">↓ Bottom</button>
     <button class="img-opt" data-pos="top">↑ Top</button>
-    <button class="img-opt" data-pos="inline">≡ Inline</button>
   </div>
 
   <label>Aspect Ratio</label>
@@ -298,11 +297,6 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
         <div id="display-body" class="card-text"></div>
       </div>
 
-      <!-- inline image slot -->
-      <div id="img-slot-inline" class="img-wrap" style="display:none;margin-top:10px">
-        <img id="img-inline" alt="">
-        <div class="img-placeholder" id="ph-inline"></div>
-      </div>
     </div>
 
     <!-- bottom image slot -->
@@ -407,22 +401,16 @@ function liveUpdate(){
   // Image slots — show correct one
   const slotTop    = document.getElementById('img-slot-top');
   const slotBottom = document.getElementById('img-slot-bottom');
-  const slotInline = document.getElementById('img-slot-inline');
   slotTop.style.display    = imgPosition==='top'    ? 'block' : 'none';
   slotBottom.style.display = imgPosition==='bottom' ? 'block' : 'none';
-  slotInline.style.display = imgPosition==='inline' ? 'block' : 'none';
 
   // Compute image height from card width & ratio
   const cardW = card.offsetWidth || parseInt(gv('w-range'));
   const ratio  = ratioNum(imgRatio);
 
-  // For top/bottom: full-width minus inset on sides
-  const slotW_edge   = cardW - inset * 2;
-  const slotH_edge   = Math.round(slotW_edge / ratio);
-  // For inline: inside padding (22px each side)
-  const innerPad = 22;
-  const slotW_inline = cardW - innerPad * 2 - inset * 2;
-  const slotH_inline = Math.round(slotW_inline / ratio);
+  // Full-width minus inset on sides
+  const slotW   = cardW - inset * 2;
+  const slotH   = Math.round(slotW / ratio);
 
   const imgCornerR = rounded ? Math.max(4, Math.min(16, inset + 2)) : 0;
 
@@ -447,7 +435,7 @@ function liveUpdate(){
     styleSlot(slotTop,
       document.getElementById('img-top'),
       document.getElementById('ph-top'),
-      slotW_edge, slotH_edge,
+      slotW, slotH,
       `${inset}px ${inset}px 0`
     );
   }
@@ -455,16 +443,8 @@ function liveUpdate(){
     styleSlot(slotBottom,
       document.getElementById('img-bottom'),
       document.getElementById('ph-bottom'),
-      slotW_edge, slotH_edge,
+      slotW, slotH,
       `0 ${inset}px ${inset}px`
-    );
-  }
-  if(imgPosition==='inline'){
-    styleSlot(slotInline,
-      document.getElementById('img-inline'),
-      document.getElementById('ph-inline'),
-      slotW_inline, slotH_inline,
-      `10px ${inset}px 0`
     );
   }
 
