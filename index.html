@@ -301,6 +301,12 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   transition:all .12s; font-family:'DM Sans',sans-serif;
 }
 .aspect-opt:hover, .aspect-opt.active { border-color:var(--accent); color:var(--accent); }
+.img-fit-opts { display:flex; gap:5px; margin-bottom:8px; }
+.fit-opt {
+  flex:1; padding:6px 8px; font-size:11px; border:1px solid var(--border);
+  background:var(--bg); color:var(--muted); border-radius:5px; cursor:pointer;
+}
+.fit-opt.active { background:var(--accent); color:#fff; border-color:var(--accent); }
 .export-group { display:flex; flex-direction:column; gap:5px; margin-top:10px; }
 .export-btn {
   width:100%; border:none; border-radius:7px;
@@ -401,7 +407,54 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
   flex-shrink:0; overflow:hidden; line-height:0;
   transition: margin .15s, border-radius .15s;
 }
-.img-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+.img-wrap img { width:100%; height:100%; display:block; transition: transform 0.1s; }
+.img-wrap img.draggable { cursor: grab; }
+.img-wrap img.dragging { cursor: grabbing; transition: none; }
+.img-wrap img.contain-mode { cursor: default; object-fit: contain; }
+
+/* Zoom controls */
+.preview-area {
+  position: relative;
+  flex-direction: column;
+  gap: 16px;
+}
+.preview-area > * {
+  flex-shrink: 0;
+}
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+.zoom-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.zoom-value {
+  font-size: 12px;
+  color: var(--text);
+  min-width: 40px;
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+}
 .img-placeholder {
   width:100%; height:100%; display:flex; align-items:center; justify-content:center;
   color:rgba(255,255,255,.2); font-size:12px; background:rgba(0,0,0,.12);
@@ -538,6 +591,12 @@ Perfect for sharing blog posts, product launches, or announcements.</textarea>
     <button class="aspect-opt" data-ratio="4/3">4:3</button>
     <button class="aspect-opt" data-ratio="1/1">1:1</button>
     <button class="aspect-opt" data-ratio="9/16">9:16</button>
+  </div>
+
+  <label>Image Fit</label>
+  <div class="img-fit-opts">
+    <button class="fit-opt active" data-fit="cover">Cover</button>
+    <button class="fit-opt" data-fit="contain">Contain</button>
   </div>
 
   <label style="margin-top:2px">
@@ -918,6 +977,14 @@ Perfect for sharing blog posts, product launches, or announcements.</textarea>
       <div class="img-placeholder" id="ph-bottom">No image uploaded</div>
     </div>
   </div>
+
+  <!-- Zoom controls (outside card so not included in exports) -->
+  <div class="zoom-controls" id="zoom-controls">
+    <button class="zoom-btn" id="zoom-out" title="Zoom out">−</button>
+    <span class="zoom-value" id="zoom-value">100%</span>
+    <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+    <button class="zoom-btn" id="zoom-reset" title="Reset zoom">↺</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -958,6 +1025,10 @@ let avatarDataURL  = null;
 let cardImgDataURL = null;
 let imgPosition    = 'bottom';
 let imgRatio       = '16/9';
+let imgFit         = 'cover';
+let imgOffsetX     = 0; // pixels for translate
+let imgOffsetY     = 0; // pixels for translate
+let imgZoom        = 1;  // scale factor (1 = 100%)
 
 const PLATFORM_PRESETS = {
   twitter:   { w: 516, h: 0 },
@@ -1525,6 +1596,10 @@ function liveUpdate(){
   const slotTop    = document.getElementById('img-slot-top');
   const slotBottom = document.getElementById('img-slot-bottom');
 
+  // Show/hide zoom controls based on image and fit mode
+  const zoomControls = document.getElementById('zoom-controls');
+  zoomControls.style.display = (cardImgDataURL && showImg && imgFit === 'cover') ? 'flex' : 'none';
+
   if (!showImg) {
     slotTop.style.display = 'none';
     slotBottom.style.display = 'none';
@@ -1548,7 +1623,25 @@ function liveUpdate(){
     slot.style.margin       = marginStr;
     slot.style.borderRadius = imgCornerR + 'px';
     slot.style.overflow     = 'hidden';
-    if(imgEl) imgEl.style.height = h + 'px';
+    if(imgEl){
+      imgEl.style.height = h + 'px';
+      if (imgFit === 'cover') {
+        // Constrain offsets to prevent dragging out of view
+        const maxOffsetX = (imgZoom - 1) * w / (2 * imgZoom);
+        const maxOffsetY = (imgZoom - 1) * h / (2 * imgZoom);
+        const constrainedX = Math.max(-maxOffsetX, Math.min(maxOffsetX, imgOffsetX));
+        const constrainedY = Math.max(-maxOffsetY, Math.min(maxOffsetY, imgOffsetY));
+
+        imgEl.style.objectFit = 'cover';
+        imgEl.style.transform = `scale(${imgZoom}) translate(${constrainedX}px, ${constrainedY}px)`;
+        imgEl.style.transformOrigin = 'center center';
+      } else {
+        imgEl.style.objectFit = 'contain';
+        imgEl.style.transform = 'none';
+      }
+      imgEl.classList.toggle('draggable', imgFit === 'cover' && cardImgDataURL);
+      imgEl.classList.toggle('contain-mode', imgFit === 'contain');
+    }
     if(phEl)  phEl.style.height  = h + 'px';
     if(cardImgDataURL){
       if(imgEl){ imgEl.src=cardImgDataURL; imgEl.style.display='block'; }
@@ -1632,6 +1725,114 @@ document.querySelectorAll('.aspect-opt').forEach(btn=>{
     imgRatio = btn.dataset.ratio;
     liveUpdate();
   });
+});
+
+document.querySelectorAll('.fit-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fit-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    imgFit = btn.dataset.fit;
+    liveUpdate();
+  });
+});
+
+// Zoom controls
+function updateZoomUI() {
+  document.getElementById('zoom-value').textContent = Math.round(imgZoom * 100) + '%';
+  document.getElementById('zoom-out').disabled = imgZoom <= 1;
+  document.getElementById('zoom-in').disabled = imgZoom >= 4;
+}
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  if (imgZoom < 4) {
+    imgZoom = Math.min(4, imgZoom + 0.25);
+    updateZoomUI();
+    liveUpdate();
+  }
+});
+
+document.getElementById('zoom-out').addEventListener('click', () => {
+  if (imgZoom > 1) {
+    imgZoom = Math.max(1, imgZoom - 0.25);
+    updateZoomUI();
+    liveUpdate();
+  }
+});
+
+document.getElementById('zoom-reset').addEventListener('click', () => {
+  imgZoom = 1;
+  imgOffsetX = 0;
+  imgOffsetY = 0;
+  updateZoomUI();
+  liveUpdate();
+});
+
+updateZoomUI();
+
+// Image drag for cover mode positioning
+let isDraggingImg = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStartOffsetX = 0;
+let dragStartOffsetY = 0;
+
+function setupImageDrag(imgEl) {
+  if (!imgEl) return;
+
+  imgEl.addEventListener('mousedown', (e) => {
+    if (imgFit !== 'cover' || !cardImgDataURL) return;
+    e.preventDefault();
+    isDraggingImg = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragStartOffsetX = imgOffsetX;
+    dragStartOffsetY = imgOffsetY;
+    imgEl.classList.add('dragging');
+  });
+}
+
+// Setup drag for both image slots
+setupImageDrag(document.getElementById('img-top'));
+setupImageDrag(document.getElementById('img-bottom'));
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDraggingImg) return;
+
+  const activeSlot = imgPosition === 'top'
+    ? document.getElementById('img-slot-top')
+    : document.getElementById('img-slot-bottom');
+
+  if (!activeSlot) return;
+
+  // Calculate pixel delta and adjust for zoom level
+  const deltaX = (e.clientX - dragStartX) / imgZoom;
+  const deltaY = (e.clientY - dragStartY) / imgZoom;
+
+  // Calculate max offset to prevent dragging image out of view
+  // At zoom = 1, maxOffset = 0 (can't pan)
+  // At zoom > 1, maxOffset = half the extra space created by zoom
+  const maxOffsetX = (imgZoom - 1) * activeSlot.offsetWidth / (2 * imgZoom);
+  const maxOffsetY = (imgZoom - 1) * activeSlot.offsetHeight / (2 * imgZoom);
+
+  imgOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStartOffsetX + deltaX));
+  imgOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStartOffsetY + deltaY));
+
+  // Apply transform directly to the visible image
+  const activeImg = imgPosition === 'top'
+    ? document.getElementById('img-top')
+    : document.getElementById('img-bottom');
+
+  if (activeImg) {
+    activeImg.style.transform = `scale(${imgZoom}) translate(${imgOffsetX}px, ${imgOffsetY}px)`;
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isDraggingImg) {
+    isDraggingImg = false;
+    document.querySelectorAll('.img-wrap img').forEach(img => img.classList.remove('dragging'));
+    saveState();
+  }
 });
 
 // File handlers
@@ -1734,7 +1935,11 @@ function saveState() {
       avatar: avatarDataURL,
       cardImg: cardImgDataURL,
       position: imgPosition,
-      ratio: imgRatio
+      ratio: imgRatio,
+      fit: imgFit,
+      offsetX: imgOffsetX,
+      offsetY: imgOffsetY,
+      zoom: imgZoom
     },
     sliders: {
       inset: gv('inset-range'),
@@ -1790,6 +1995,10 @@ function restoreState() {
       cardImgDataURL = state.images.cardImg;
       imgPosition = state.images.position || 'bottom';
       imgRatio = state.images.ratio || '16/9';
+      imgFit = state.images.fit || 'cover';
+      imgOffsetX = state.images.offsetX ?? 0;
+      imgOffsetY = state.images.offsetY ?? 0;
+      imgZoom = state.images.zoom ?? 1;
 
       if (avatarDataURL) {
         document.getElementById('avatar-display').src = avatarDataURL;
@@ -1798,6 +2007,14 @@ function restoreState() {
         document.getElementById('card-image').src = cardImgDataURL;
         document.getElementById('card-image').style.display = 'block';
       }
+
+      // Restore fit mode button state
+      document.querySelectorAll('.fit-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.fit === imgFit);
+      });
+
+      // Restore zoom UI
+      if (typeof updateZoomUI === 'function') updateZoomUI();
     }
 
     return true;
