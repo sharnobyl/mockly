@@ -1665,32 +1665,42 @@ function liveUpdate(){
     slot.style.borderRadius = imgCornerR + 'px';
     slot.style.overflow     = 'hidden';
     if(imgEl){
-      imgEl.style.height = h + 'px';
       if (imgFit === 'cover') {
-        // Calculate actual image dimensions after object-fit: cover
-        // to determine how much panning is possible at 100% zoom
-        let actualW = w, actualH = h;
+        // Calculate actual dimensions to cover the container
+        // Size the img to these dimensions (not container size) so panning works correctly
+        let displayW = w, displayH = h;
         if (imgNaturalW > 0 && imgNaturalH > 0) {
           const imageRatio = imgNaturalW / imgNaturalH;
           const containerRatio = w / h;
           if (imageRatio > containerRatio) {
-            // Image is wider - scaled to match height
-            actualW = h * imageRatio;
+            // Image is wider - scale to match height
+            displayW = h * imageRatio;
           } else {
-            // Image is taller - scaled to match width
-            actualH = w / imageRatio;
+            // Image is taller - scale to match width
+            displayH = w / imageRatio;
           }
         }
+        // Size img to cover dimensions and center with margin
+        imgEl.style.width = displayW + 'px';
+        imgEl.style.height = displayH + 'px';
+        imgEl.style.marginLeft = (w - displayW) / 2 + 'px';
+        imgEl.style.marginTop = (h - displayH) / 2 + 'px';
+        imgEl.style.objectFit = 'none';
+
         // Max offset = half of (scaled image size - container size)
-        const maxOffsetX = Math.max(0, (actualW * imgZoom - w) / 2);
-        const maxOffsetY = Math.max(0, (actualH * imgZoom - h) / 2);
+        const maxOffsetX = Math.max(0, (displayW * imgZoom - w) / 2);
+        const maxOffsetY = Math.max(0, (displayH * imgZoom - h) / 2);
         const constrainedX = Math.max(-maxOffsetX, Math.min(maxOffsetX, imgOffsetX));
         const constrainedY = Math.max(-maxOffsetY, Math.min(maxOffsetY, imgOffsetY));
 
-        imgEl.style.objectFit = 'cover';
         imgEl.style.transform = `scale(${imgZoom}) translate(${constrainedX}px, ${constrainedY}px)`;
         imgEl.style.transformOrigin = 'center center';
       } else {
+        // Contain mode - use object-fit: contain with container dimensions
+        imgEl.style.width = w + 'px';
+        imgEl.style.height = h + 'px';
+        imgEl.style.marginLeft = '0';
+        imgEl.style.marginTop = '0';
         imgEl.style.objectFit = 'contain';
         imgEl.style.transform = 'none';
       }
@@ -1860,22 +1870,22 @@ function handleDragMove(clientX, clientY) {
   const deltaX = (clientX - dragStartX) / imgZoom;
   const deltaY = (clientY - dragStartY) / imgZoom;
 
-  // Calculate actual image dimensions after object-fit: cover
+  // Calculate display dimensions (what the img is sized to)
   // to determine how much panning is possible
   const w = activeSlot.offsetWidth;
   const h = activeSlot.offsetHeight;
-  let actualW = w, actualH = h;
+  let displayW = w, displayH = h;
   if (imgNaturalW > 0 && imgNaturalH > 0) {
     const imageRatio = imgNaturalW / imgNaturalH;
     const containerRatio = w / h;
     if (imageRatio > containerRatio) {
-      actualW = h * imageRatio;
+      displayW = h * imageRatio;
     } else {
-      actualH = w / imageRatio;
+      displayH = w / imageRatio;
     }
   }
-  const maxOffsetX = Math.max(0, (actualW * imgZoom - w) / 2);
-  const maxOffsetY = Math.max(0, (actualH * imgZoom - h) / 2);
+  const maxOffsetX = Math.max(0, (displayW * imgZoom - w) / 2);
+  const maxOffsetY = Math.max(0, (displayH * imgZoom - h) / 2);
 
   imgOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStartOffsetX + deltaX));
   imgOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStartOffsetY + deltaY));
