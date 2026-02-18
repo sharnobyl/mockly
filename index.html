@@ -1414,10 +1414,11 @@ function scaleCardForMobile() {
     const scale = Math.min(1, availableWidth / cardWidth);
     card.style.transform = `scale(${scale})`;
     card.style.transformOrigin = 'top center';
-    previewArea.style.minHeight = (card.offsetHeight * scale) + 32 + 'px';
+    // Fix: Set preview area height to scaled card height
+    previewArea.style.height = (card.offsetHeight * scale) + 32 + 'px';
   } else {
     card.style.transform = '';
-    previewArea.style.minHeight = '';
+    previewArea.style.height = '';
   }
 }
 
