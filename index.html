@@ -1667,9 +1667,23 @@ function liveUpdate(){
     if(imgEl){
       imgEl.style.height = h + 'px';
       if (imgFit === 'cover') {
-        // Constrain offsets to prevent dragging out of view
-        const maxOffsetX = (imgZoom - 1) * w / (2 * imgZoom);
-        const maxOffsetY = (imgZoom - 1) * h / (2 * imgZoom);
+        // Calculate actual image dimensions after object-fit: cover
+        // to determine how much panning is possible at 100% zoom
+        let actualW = w, actualH = h;
+        if (imgNaturalW > 0 && imgNaturalH > 0) {
+          const imageRatio = imgNaturalW / imgNaturalH;
+          const containerRatio = w / h;
+          if (imageRatio > containerRatio) {
+            // Image is wider - scaled to match height
+            actualW = h * imageRatio;
+          } else {
+            // Image is taller - scaled to match width
+            actualH = w / imageRatio;
+          }
+        }
+        // Max offset = half of (scaled image size - container size)
+        const maxOffsetX = Math.max(0, (actualW * imgZoom - w) / 2);
+        const maxOffsetY = Math.max(0, (actualH * imgZoom - h) / 2);
         const constrainedX = Math.max(-maxOffsetX, Math.min(maxOffsetX, imgOffsetX));
         const constrainedY = Math.max(-maxOffsetY, Math.min(maxOffsetY, imgOffsetY));
 
@@ -1846,11 +1860,22 @@ function handleDragMove(clientX, clientY) {
   const deltaX = (clientX - dragStartX) / imgZoom;
   const deltaY = (clientY - dragStartY) / imgZoom;
 
-  // Calculate max offset to prevent dragging image out of view
-  // At zoom = 1, maxOffset = 0 (can't pan)
-  // At zoom > 1, maxOffset = half the extra space created by zoom
-  const maxOffsetX = (imgZoom - 1) * activeSlot.offsetWidth / (2 * imgZoom);
-  const maxOffsetY = (imgZoom - 1) * activeSlot.offsetHeight / (2 * imgZoom);
+  // Calculate actual image dimensions after object-fit: cover
+  // to determine how much panning is possible
+  const w = activeSlot.offsetWidth;
+  const h = activeSlot.offsetHeight;
+  let actualW = w, actualH = h;
+  if (imgNaturalW > 0 && imgNaturalH > 0) {
+    const imageRatio = imgNaturalW / imgNaturalH;
+    const containerRatio = w / h;
+    if (imageRatio > containerRatio) {
+      actualW = h * imageRatio;
+    } else {
+      actualH = w / imageRatio;
+    }
+  }
+  const maxOffsetX = Math.max(0, (actualW * imgZoom - w) / 2);
+  const maxOffsetY = Math.max(0, (actualH * imgZoom - h) / 2);
 
   imgOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, dragStartOffsetX + deltaX));
   imgOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, dragStartOffsetY + deltaY));
