@@ -10,7 +10,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg: #1e1e1e; --surface: #2d2d2d; --border: #3d3d3d;
-  --accent: #4a9eff; --accent-hover: #3d8ae6; --text: #e0e0e0; --muted: #8c8c8c;
+  --accent: #2d49b9; --accent-hover: #243a99; --text: #e0e0e0; --muted: #8c8c8c;
 }
 body {
   background: var(--bg); color: var(--text);
@@ -31,6 +31,7 @@ header h1 span { color: var(--accent); }
   background: var(--accent);
   color:#fff; font-size:9px; font-weight:700;
   padding:2px 7px; border-radius:99px; letter-spacing:1px; text-transform:uppercase;
+  text-decoration: none;
 }
 .controls {
   background:var(--surface); border-right:1px solid var(--border);
@@ -368,7 +369,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 
 <header>
   <h1>Mock<span>ly</span></h1>
-  <div class="badge">Studio</div>
+  <a href="https://hotoffthepatentpress.com" target="_blank" class="badge">by Hot Off The Patent Press</a>
 </header>
 
 <!-- CONTROLS -->
@@ -427,7 +428,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
       <button class="stepper-btn reset" onclick="resetValue('nameSize')">↺</button>
     </div>
   </div>
-  <input type="text" id="name-input" value="Patent Press" oninput="liveUpdate()">
+  <input type="text" id="name-input" value="Mockly" oninput="liveUpdate()">
 
   <div class="ctrl-row">
     <span class="ctrl-label">Handle</span>
@@ -438,7 +439,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
       <button class="stepper-btn reset" onclick="resetValue('handleSize')">↺</button>
     </div>
   </div>
-  <input type="text" id="handle-input" value="@patent.press" oninput="liveUpdate()">
+  <input type="text" id="handle-input" value="@mockly.app" oninput="liveUpdate()">
 
   <label>Verified Badge</label>
   <select id="verified-select" onchange="liveUpdate()">
@@ -457,7 +458,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
       <button class="stepper-btn reset" onclick="resetValue('titleSize')">↺</button>
     </div>
   </div>
-  <input type="text" id="title-input" value="AI takes the wheel" oninput="liveUpdate()">
+  <input type="text" id="title-input" value="Create beautiful social cards" oninput="liveUpdate()">
 
   <div class="ctrl-row">
     <span class="ctrl-label">Body (supports **bold**, *italic*, `code`, [link](url))</span>
@@ -468,9 +469,9 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
       <button class="stepper-btn reset" onclick="resetValue('bodySize')">↺</button>
     </div>
   </div>
-  <textarea id="body-input" oninput="liveUpdate()">Strong Force's new patent envisions cars that know your feelings.
-Sensors track your heartbeat, sweat, voice stress and cabin humidity. AI fuses this with driving data to track your emotive state.
-It can blast air, adjust lights, or even take control of the wheel.</textarea>
+  <textarea id="body-input" oninput="liveUpdate()">Design Twitter/X-style social cards in seconds.
+Customize colors, fonts, images, and layout. Export as PNG or JPEG.
+Perfect for sharing blog posts, product launches, or announcements.</textarea>
 
   <div class="sec">Card Image</div>
   <label style="margin-bottom:6px">
@@ -849,19 +850,19 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
         <img id="avatar-display" src="" alt="avatar">
         <div class="card-identity">
           <div class="card-name-row">
-            <span id="display-name">Patent Press</span>
+            <span id="display-name">Mockly</span>
             <svg id="verified-icon" class="vbadge" viewBox="0 0 22 22" fill="none">
-              <circle cx="11" cy="11" r="11" fill="#1D9BF0"/>
+              <circle cx="11" cy="11" r="11" fill="#2d49b9"/>
               <path d="M7 11.5L10 14.5L15 8.5" stroke="white" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <span id="display-handle">@patent.press</span>
+          <span id="display-handle">@mockly.app</span>
         </div>
       </div>
 
       <div class="card-body">
-        <div id="display-title">AI takes the wheel</div>
+        <div id="display-title">Create beautiful social cards</div>
         <div id="display-body" class="card-text"></div>
       </div>
 
@@ -889,7 +890,7 @@ const DEFAULTS = {
   avatarSize: 40,
   cornerRadius: 16,
   inset: 10,
-  bgColor: '#2d49b8',
+  bgColor: '#000000',
   nameColor: '#ffffff',
   handleColor: '#999999',
   headlineColor: '#ffffff',
@@ -948,7 +949,7 @@ function ratioNum(r){ const [a,b]=r.split('/').map(Number); return a/b; }
 
 // ============ COLOR PICKER ============
 const colorPickerState = {
-  bg: { hex: '#2d49b8', h: 227, s: 60, l: 45, a: 100 },
+  bg: { hex: '#000000', h: 0, s: 0, l: 0, a: 100 },
   name: { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 },
   handle: { hex: '#999999', h: 0, s: 0, l: 60, a: 100 },
   headline: { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 },
@@ -1446,7 +1447,7 @@ function liveUpdate(){
   if(verified==='none'){ icon.style.display='none'; }
   else {
     icon.style.display='inline-block';
-    icon.querySelector('circle').setAttribute('fill', verified==='gold'?'#F4A400':'#1D9BF0');
+    icon.querySelector('circle').setAttribute('fill', verified==='gold'?'#F4A400':'#2d49b9');
   }
 
   // Avatar
