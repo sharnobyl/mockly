@@ -1632,12 +1632,19 @@ function liveUpdate(){
     slotBottom.style.display = imgPosition==='bottom' ? 'block' : 'none';
   }
 
-  // Compute image height from card width & ratio
+  // Compute image height based on fit mode
   const cardW = card.offsetWidth || sizes.width;
-  const ratio  = ratioNum(imgRatio);
-
   const slotW   = cardW - inset * 2;
-  const slotH   = Math.round(slotW / ratio);
+
+  let slotH;
+  if (imgFit === 'contain' && imgNaturalW > 0 && imgNaturalH > 0) {
+    // Use natural aspect ratio for contain mode
+    slotH = Math.round((slotW * imgNaturalH) / imgNaturalW);
+  } else {
+    // Use selected aspect ratio for cover mode
+    const ratio = ratioNum(imgRatio);
+    slotH = Math.round(slotW / ratio);
+  }
 
   const imgCornerR = rounded ? Math.max(4, Math.min(16, inset + 2)) : 0;
 
