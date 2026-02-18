@@ -162,8 +162,25 @@ input[type=range] { width:100%; accent-color:var(--accent); margin-top:4px; disp
   transform:translateX(-50%);
 }
 
+.color-alpha-slider {
+  width:100%; height:12px; border-radius:6px;
+  background:repeating-conic-gradient(#3d3d3d 0% 25%,#4a4a4a 0% 50%) 0 0/8px 8px;
+  position:relative; cursor:crosshair; margin-bottom:12px;
+}
+.color-alpha-slider::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to right, transparent, var(--alpha-color, #fff));
+  border-radius:6px;
+}
+.color-alpha-pointer {
+  position:absolute; top:-2px; width:6px; height:16px;
+  background:#fff; border-radius:2px;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+  transform:translateX(-50%);
+}
+
 .color-inputs {
-  display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+  display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px;
   margin-bottom:10px;
 }
 .color-input-group { display:flex; flex-direction:column; gap:2px; }
@@ -220,6 +237,16 @@ input[type=range] { width:100%; accent-color:var(--accent); margin-top:4px; disp
   cursor:pointer;
 }
 .saved-color-swatch:hover .delete-btn { display:flex; }
+
+.quick-colors {
+  display:flex; align-items:center; gap:3px; margin-left:4px;
+}
+.quick-color-swatch {
+  width:16px; height:16px; border-radius:3px; cursor:pointer;
+  border:1px solid var(--border); flex-shrink:0;
+  transition:border-color .12s;
+}
+.quick-color-swatch:hover { border-color:var(--accent); }
 
 input[type=color] {
   width:32px; height:32px; border:1px solid var(--border);
@@ -319,10 +346,10 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
 .card-name-row { display:flex; align-items:center; gap:5px; }
 #display-name { font-weight:700; font-size:14.5px; line-height:1.2; }
 .vbadge { width:16px; height:16px; flex-shrink:0; }
-#display-handle { font-size:13px; margin-top:1px; opacity:.6; }
+#display-handle { font-size:13px; margin-top:1px; }
 .card-body { flex-shrink:0; }
 #display-title { font-weight:800; font-size:18px; margin-bottom:10px; line-height:1.3; }
-.card-text p { font-size:14.5px; line-height:1.55; margin-bottom:8px; opacity:.88; }
+.card-text p { font-size:14.5px; line-height:1.55; margin-bottom:8px; }
 .card-text p:last-child { margin-bottom:0; }
 
 /* image wrappers */
@@ -446,6 +473,11 @@ Sensors track your heartbeat, sweat, voice stress and cabin humidity. AI fuses t
 It can blast air, adjust lights, or even take control of the wheel.</textarea>
 
   <div class="sec">Card Image</div>
+  <label style="margin-bottom:6px">
+    <input type="checkbox" id="show-img-check" onchange="liveUpdate()" checked
+      style="accent-color:var(--accent);margin-right:5px">
+    Show image
+  </label>
   <button class="upload-btn" id="card-img-btn" onclick="document.getElementById('card-img-upload').click()">↑ Upload image</button>
   <input type="file" id="card-img-upload" accept="image/*" style="display:none" onchange="handleCardImage(event)">
 
@@ -487,6 +519,7 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
       <div class="color-trigger-color" id="bg-trigger-color"></div>
     </div>
     <label style="margin:0;flex:1">Background</label>
+    <div class="quick-colors" id="bg-quick-colors"></div>
     <button class="stepper-btn reset" onclick="resetValue('bgColor')">↺</button>
     <div class="color-picker-popup" id="bg-picker">
       <div class="color-spectrum" id="bg-spectrum">
@@ -494,6 +527,9 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
       </div>
       <div class="color-hue-slider" id="bg-hue">
         <div class="color-hue-pointer" id="bg-hue-pointer"></div>
+      </div>
+      <div class="color-alpha-slider" id="bg-alpha">
+        <div class="color-alpha-pointer" id="bg-alpha-pointer"></div>
       </div>
       <div class="color-hex-input">
         <label>HEX</label>
@@ -526,68 +562,249 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
           <label>L</label>
           <input type="number" id="bg-l" min="0" max="100">
         </div>
-      </div>
-      <div class="saved-colors">
-        <div class="saved-colors-header">
-          <span>Saved Colors</span>
-          <button class="save-color-btn" onclick="saveColor('bg')">+</button>
+        <div class="color-input-group">
+          <label>A</label>
+          <input type="number" id="bg-a" min="0" max="100">
         </div>
-        <div class="saved-colors-list" id="bg-saved-list"></div>
+      </div>
+      <div class="saved-colors" style="display:flex;justify-content:center;padding-top:8px;">
+        <button class="save-color-btn" onclick="saveColor('bg')" title="Save current color">+</button>
       </div>
     </div>
   </div>
   <div class="color-row">
-    <div class="color-trigger" id="text-trigger" onclick="toggleColorPicker('text')">
+    <div class="color-trigger" id="name-trigger" onclick="toggleColorPicker('name')">
       <div class="color-trigger-bg"></div>
-      <div class="color-trigger-color" id="text-trigger-color"></div>
+      <div class="color-trigger-color" id="name-trigger-color"></div>
     </div>
-    <label style="margin:0;flex:1">Text color</label>
-    <button class="stepper-btn reset" onclick="resetValue('textColor')">↺</button>
-    <div class="color-picker-popup" id="text-picker">
-      <div class="color-spectrum" id="text-spectrum">
-        <div class="color-spectrum-pointer" id="text-spectrum-pointer"></div>
+    <label style="margin:0;flex:1">Name color</label>
+    <div class="quick-colors" id="name-quick-colors"></div>
+    <button class="stepper-btn reset" onclick="resetValue('nameColor')">↺</button>
+    <div class="color-picker-popup" id="name-picker">
+      <div class="color-spectrum" id="name-spectrum">
+        <div class="color-spectrum-pointer" id="name-spectrum-pointer"></div>
       </div>
-      <div class="color-hue-slider" id="text-hue">
-        <div class="color-hue-pointer" id="text-hue-pointer"></div>
+      <div class="color-hue-slider" id="name-hue">
+        <div class="color-hue-pointer" id="name-hue-pointer"></div>
+      </div>
+      <div class="color-alpha-slider" id="name-alpha">
+        <div class="color-alpha-pointer" id="name-alpha-pointer"></div>
       </div>
       <div class="color-hex-input">
         <label>HEX</label>
-        <input type="text" id="text-hex" maxlength="7">
+        <input type="text" id="name-hex" maxlength="7">
       </div>
       <div class="color-inputs">
         <div class="color-input-group">
           <label>R</label>
-          <input type="number" id="text-r" min="0" max="255">
+          <input type="number" id="name-r" min="0" max="255">
         </div>
         <div class="color-input-group">
           <label>G</label>
-          <input type="number" id="text-g" min="0" max="255">
+          <input type="number" id="name-g" min="0" max="255">
         </div>
         <div class="color-input-group">
           <label>B</label>
-          <input type="number" id="text-b" min="0" max="255">
+          <input type="number" id="name-b" min="0" max="255">
         </div>
       </div>
       <div class="color-inputs">
         <div class="color-input-group">
           <label>H</label>
-          <input type="number" id="text-h" min="0" max="360">
+          <input type="number" id="name-h" min="0" max="360">
         </div>
         <div class="color-input-group">
           <label>S</label>
-          <input type="number" id="text-s" min="0" max="100">
+          <input type="number" id="name-s" min="0" max="100">
         </div>
         <div class="color-input-group">
           <label>L</label>
-          <input type="number" id="text-l" min="0" max="100">
+          <input type="number" id="name-l" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>A</label>
+          <input type="number" id="name-a" min="0" max="100">
         </div>
       </div>
-      <div class="saved-colors">
-        <div class="saved-colors-header">
-          <span>Saved Colors</span>
-          <button class="save-color-btn" onclick="saveColor('text')">+</button>
+      <div class="saved-colors" style="display:flex;justify-content:center;padding-top:8px;">
+        <button class="save-color-btn" onclick="saveColor('name')" title="Save current color">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-trigger" id="handle-trigger" onclick="toggleColorPicker('handle')">
+      <div class="color-trigger-bg"></div>
+      <div class="color-trigger-color" id="handle-trigger-color"></div>
+    </div>
+    <label style="margin:0;flex:1">Handle color</label>
+    <div class="quick-colors" id="handle-quick-colors"></div>
+    <button class="stepper-btn reset" onclick="resetValue('handleColor')">↺</button>
+    <div class="color-picker-popup" id="handle-picker">
+      <div class="color-spectrum" id="handle-spectrum">
+        <div class="color-spectrum-pointer" id="handle-spectrum-pointer"></div>
+      </div>
+      <div class="color-hue-slider" id="handle-hue">
+        <div class="color-hue-pointer" id="handle-hue-pointer"></div>
+      </div>
+      <div class="color-alpha-slider" id="handle-alpha">
+        <div class="color-alpha-pointer" id="handle-alpha-pointer"></div>
+      </div>
+      <div class="color-hex-input">
+        <label>HEX</label>
+        <input type="text" id="handle-hex" maxlength="7">
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>R</label>
+          <input type="number" id="handle-r" min="0" max="255">
         </div>
-        <div class="saved-colors-list" id="text-saved-list"></div>
+        <div class="color-input-group">
+          <label>G</label>
+          <input type="number" id="handle-g" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>B</label>
+          <input type="number" id="handle-b" min="0" max="255">
+        </div>
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>H</label>
+          <input type="number" id="handle-h" min="0" max="360">
+        </div>
+        <div class="color-input-group">
+          <label>S</label>
+          <input type="number" id="handle-s" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>L</label>
+          <input type="number" id="handle-l" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>A</label>
+          <input type="number" id="handle-a" min="0" max="100">
+        </div>
+      </div>
+      <div class="saved-colors" style="display:flex;justify-content:center;padding-top:8px;">
+        <button class="save-color-btn" onclick="saveColor('handle')" title="Save current color">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-trigger" id="headline-trigger" onclick="toggleColorPicker('headline')">
+      <div class="color-trigger-bg"></div>
+      <div class="color-trigger-color" id="headline-trigger-color"></div>
+    </div>
+    <label style="margin:0;flex:1">Headline color</label>
+    <div class="quick-colors" id="headline-quick-colors"></div>
+    <button class="stepper-btn reset" onclick="resetValue('headlineColor')">↺</button>
+    <div class="color-picker-popup" id="headline-picker">
+      <div class="color-spectrum" id="headline-spectrum">
+        <div class="color-spectrum-pointer" id="headline-spectrum-pointer"></div>
+      </div>
+      <div class="color-hue-slider" id="headline-hue">
+        <div class="color-hue-pointer" id="headline-hue-pointer"></div>
+      </div>
+      <div class="color-alpha-slider" id="headline-alpha">
+        <div class="color-alpha-pointer" id="headline-alpha-pointer"></div>
+      </div>
+      <div class="color-hex-input">
+        <label>HEX</label>
+        <input type="text" id="headline-hex" maxlength="7">
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>R</label>
+          <input type="number" id="headline-r" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>G</label>
+          <input type="number" id="headline-g" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>B</label>
+          <input type="number" id="headline-b" min="0" max="255">
+        </div>
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>H</label>
+          <input type="number" id="headline-h" min="0" max="360">
+        </div>
+        <div class="color-input-group">
+          <label>S</label>
+          <input type="number" id="headline-s" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>L</label>
+          <input type="number" id="headline-l" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>A</label>
+          <input type="number" id="headline-a" min="0" max="100">
+        </div>
+      </div>
+      <div class="saved-colors" style="display:flex;justify-content:center;padding-top:8px;">
+        <button class="save-color-btn" onclick="saveColor('headline')" title="Save current color">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="color-row">
+    <div class="color-trigger" id="body-trigger" onclick="toggleColorPicker('body')">
+      <div class="color-trigger-bg"></div>
+      <div class="color-trigger-color" id="body-trigger-color"></div>
+    </div>
+    <label style="margin:0;flex:1">Body color</label>
+    <div class="quick-colors" id="body-quick-colors"></div>
+    <button class="stepper-btn reset" onclick="resetValue('bodyColor')">↺</button>
+    <div class="color-picker-popup" id="body-picker">
+      <div class="color-spectrum" id="body-spectrum">
+        <div class="color-spectrum-pointer" id="body-spectrum-pointer"></div>
+      </div>
+      <div class="color-hue-slider" id="body-hue">
+        <div class="color-hue-pointer" id="body-hue-pointer"></div>
+      </div>
+      <div class="color-alpha-slider" id="body-alpha">
+        <div class="color-alpha-pointer" id="body-alpha-pointer"></div>
+      </div>
+      <div class="color-hex-input">
+        <label>HEX</label>
+        <input type="text" id="body-hex" maxlength="7">
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>R</label>
+          <input type="number" id="body-r" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>G</label>
+          <input type="number" id="body-g" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>B</label>
+          <input type="number" id="body-b" min="0" max="255">
+        </div>
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>H</label>
+          <input type="number" id="body-h" min="0" max="360">
+        </div>
+        <div class="color-input-group">
+          <label>S</label>
+          <input type="number" id="body-s" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>L</label>
+          <input type="number" id="body-l" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>A</label>
+          <input type="number" id="body-a" min="0" max="100">
+        </div>
+      </div>
+      <div class="saved-colors" style="display:flex;justify-content:center;padding-top:8px;">
+        <button class="save-color-btn" onclick="saveColor('body')" title="Save current color">+</button>
       </div>
     </div>
   </div>
@@ -673,7 +890,10 @@ const DEFAULTS = {
   cornerRadius: 16,
   inset: 10,
   bgColor: '#2d49b8',
-  textColor: '#ffffff'
+  nameColor: '#ffffff',
+  handleColor: '#999999',
+  headlineColor: '#ffffff',
+  bodyColor: '#e0e0e0'
 };
 
 // Current state (sizes)
@@ -728,8 +948,11 @@ function ratioNum(r){ const [a,b]=r.split('/').map(Number); return a/b; }
 
 // ============ COLOR PICKER ============
 const colorPickerState = {
-  bg: { hex: '#2d49b8', h: 227, s: 60, l: 45 },
-  text: { hex: '#ffffff', h: 0, s: 0, l: 100 }
+  bg: { hex: '#2d49b8', h: 227, s: 60, l: 45, a: 100 },
+  name: { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 },
+  handle: { hex: '#999999', h: 0, s: 0, l: 60, a: 100 },
+  headline: { hex: '#ffffff', h: 0, s: 0, l: 100, a: 100 },
+  body: { hex: '#e0e0e0', h: 0, s: 0, l: 88, a: 100 }
 };
 
 // Color conversion utilities
@@ -810,8 +1033,13 @@ function updateColorPickerUI(prefix) {
   const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
   state.hex = hex;
 
-  // Update trigger swatch
-  document.getElementById(`${prefix}-trigger-color`).style.background = hex;
+  // Update trigger swatch (show checkerboard behind if alpha < 100)
+  const triggerColor = document.getElementById(`${prefix}-trigger-color`);
+  if (state.a < 100) {
+    triggerColor.style.background = `rgba(${rgb.r},${rgb.g},${rgb.b},${state.a / 100})`;
+  } else {
+    triggerColor.style.background = hex;
+  }
 
   // Update spectrum background (hue)
   document.getElementById(`${prefix}-spectrum`).style.color = `hsl(${state.h}, 100%, 50%)`;
@@ -826,6 +1054,11 @@ function updateColorPickerUI(prefix) {
   // Update hue pointer
   document.getElementById(`${prefix}-hue-pointer`).style.left = `${(state.h / 360) * 100}%`;
 
+  // Update alpha slider
+  const alphaSlider = document.getElementById(`${prefix}-alpha`);
+  alphaSlider.style.setProperty('--alpha-color', `hsl(${state.h}, ${state.s}%, ${state.l}%)`);
+  document.getElementById(`${prefix}-alpha-pointer`).style.left = `${state.a}%`;
+
   // Update inputs
   document.getElementById(`${prefix}-hex`).value = hex;
   document.getElementById(`${prefix}-r`).value = rgb.r;
@@ -834,12 +1067,14 @@ function updateColorPickerUI(prefix) {
   document.getElementById(`${prefix}-h`).value = state.h;
   document.getElementById(`${prefix}-s`).value = state.s;
   document.getElementById(`${prefix}-l`).value = state.l;
+  document.getElementById(`${prefix}-a`).value = state.a;
 }
 
-function setColorFromHSL(prefix, h, s, l) {
+function setColorFromHSL(prefix, h, s, l, a) {
   colorPickerState[prefix].h = h;
   colorPickerState[prefix].s = s;
   colorPickerState[prefix].l = l;
+  if (a !== undefined) colorPickerState[prefix].a = a;
   updateColorPickerUI(prefix);
   liveUpdate();
 }
@@ -856,7 +1091,12 @@ function setColorFromHex(prefix, hex) {
 }
 
 function getPickerColor(prefix) {
-  return colorPickerState[prefix].hex;
+  const state = colorPickerState[prefix];
+  if (state.a < 100) {
+    const rgb = hslToRgb(state.h, state.s, state.l);
+    return `rgba(${rgb.r},${rgb.g},${rgb.b},${(state.a / 100).toFixed(2)})`;
+  }
+  return state.hex;
 }
 
 function toggleColorPicker(prefix) {
@@ -870,10 +1110,19 @@ function toggleColorPicker(prefix) {
 }
 
 // Saved colors with localStorage
+const PRESET_COLORS = ['#ffffff', '#eae4d3', '#999999', '#2d49b8', '#000000'];
+
 function getSavedColors() {
+  let saved = [];
   try {
-    return JSON.parse(localStorage.getItem('mocklySavedColors')) || [];
-  } catch { return []; }
+    saved = JSON.parse(localStorage.getItem('mocklySavedColors')) || [];
+  } catch { saved = []; }
+  // Merge presets with saved, presets first, avoiding duplicates
+  const merged = [...PRESET_COLORS];
+  saved.forEach(c => {
+    if (!merged.includes(c)) merged.push(c);
+  });
+  return merged;
 }
 
 function saveColorToStorage(hex) {
@@ -894,13 +1143,13 @@ function deleteSavedColor(hex) {
 
 function renderSavedColors() {
   const colors = getSavedColors();
-  ['bg', 'text'].forEach(prefix => {
-    const list = document.getElementById(`${prefix}-saved-list`);
-    list.innerHTML = colors.map(c => `
-      <div class="saved-color-swatch" style="background:${c}" onclick="applySavedColor('${prefix}', '${c}')" title="${c}">
-        <div class="delete-btn" onclick="event.stopPropagation(); deleteSavedColor('${c}')">×</div>
-      </div>
-    `).join('');
+  ['bg', 'name', 'handle', 'headline', 'body'].forEach(prefix => {
+    const container = document.getElementById(`${prefix}-quick-colors`);
+    if (container) {
+      container.innerHTML = colors.slice(0, 6).map(c => `
+        <div class="quick-color-swatch" style="background:${c}" onclick="applySavedColor('${prefix}', '${c}')" title="${c}"></div>
+      `).join('');
+    }
   });
 }
 
@@ -916,9 +1165,11 @@ function applySavedColor(prefix, hex) {
 function setupColorPickerInteractions(prefix) {
   const spectrum = document.getElementById(`${prefix}-spectrum`);
   const hue = document.getElementById(`${prefix}-hue`);
+  const alpha = document.getElementById(`${prefix}-alpha`);
 
   let isDraggingSpectrum = false;
   let isDraggingHue = false;
+  let isDraggingAlpha = false;
 
   function handleSpectrumMove(e) {
     const rect = spectrum.getBoundingClientRect();
@@ -937,14 +1188,24 @@ function setupColorPickerInteractions(prefix) {
     setColorFromHSL(prefix, h, state.s, state.l);
   }
 
+  function handleAlphaMove(e) {
+    const rect = alpha.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const a = Math.round(x * 100);
+    const state = colorPickerState[prefix];
+    setColorFromHSL(prefix, state.h, state.s, state.l, a);
+  }
+
   spectrum.addEventListener('mousedown', e => { isDraggingSpectrum = true; handleSpectrumMove(e); });
   hue.addEventListener('mousedown', e => { isDraggingHue = true; handleHueMove(e); });
+  alpha.addEventListener('mousedown', e => { isDraggingAlpha = true; handleAlphaMove(e); });
 
   document.addEventListener('mousemove', e => {
     if (isDraggingSpectrum) handleSpectrumMove(e);
     if (isDraggingHue) handleHueMove(e);
+    if (isDraggingAlpha) handleAlphaMove(e);
   });
-  document.addEventListener('mouseup', () => { isDraggingSpectrum = false; isDraggingHue = false; });
+  document.addEventListener('mouseup', () => { isDraggingSpectrum = false; isDraggingHue = false; isDraggingAlpha = false; });
 
   // Input handlers
   document.getElementById(`${prefix}-hex`).addEventListener('input', e => {
@@ -971,6 +1232,13 @@ function setupColorPickerInteractions(prefix) {
       setColorFromHSL(prefix, h, s, l);
     });
   });
+
+  // Alpha input handler
+  document.getElementById(`${prefix}-a`).addEventListener('input', e => {
+    const a = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+    const state = colorPickerState[prefix];
+    setColorFromHSL(prefix, state.h, state.s, state.l, a);
+  });
 }
 
 // Close pickers when clicking outside
@@ -981,7 +1249,7 @@ document.addEventListener('click', e => {
 });
 
 function initColorPickers() {
-  ['bg', 'text'].forEach(prefix => {
+  ['bg', 'name', 'handle', 'headline', 'body'].forEach(prefix => {
     setupColorPickerInteractions(prefix);
     updateColorPickerUI(prefix);
   });
@@ -1003,8 +1271,20 @@ function resetValue(key) {
     setColorFromHex('bg', DEFAULTS.bgColor);
     return;
   }
-  if (key === 'textColor') {
-    setColorFromHex('text', DEFAULTS.textColor);
+  if (key === 'nameColor') {
+    setColorFromHex('name', DEFAULTS.nameColor);
+    return;
+  }
+  if (key === 'handleColor') {
+    setColorFromHex('handle', DEFAULTS.handleColor);
+    return;
+  }
+  if (key === 'headlineColor') {
+    setColorFromHex('headline', DEFAULTS.headlineColor);
+    return;
+  }
+  if (key === 'bodyColor') {
+    setColorFromHex('body', DEFAULTS.bodyColor);
     return;
   }
   sizes[key] = DEFAULTS[key];
@@ -1093,11 +1373,15 @@ function makeInitialsAvatar(name, fg, bg, size){
 
 // Live update
 function liveUpdate(){
-  const bg       = getPickerColor('bg');
-  const textCol  = getPickerColor('text');
+  const bg            = getPickerColor('bg');
+  const nameColor     = getPickerColor('name');
+  const handleColor   = getPickerColor('handle');
+  const headlineColor = getPickerColor('headline');
+  const bodyColor     = getPickerColor('body');
   const fontKey  = gv('font-select');
   const verified = gv('verified-select');
   const rounded  = document.getElementById('rounded-img-check').checked;
+  const showImg  = document.getElementById('show-img-check').checked;
   const name     = gv('name-input');
   const handle   = gv('handle-input');
   const title    = gv('title-input');
@@ -1120,7 +1404,6 @@ function liveUpdate(){
   // Card base styles
   const card = document.getElementById('card');
   card.style.background   = bg;
-  card.style.color        = textCol;
   card.style.fontFamily   = FONT_CSS[fontKey];
   card.style.borderRadius = radius + 'px';
 
@@ -1133,10 +1416,12 @@ function liveUpdate(){
   const nameEl = document.getElementById('display-name');
   nameEl.textContent = name;
   nameEl.style.fontSize = sizes.nameSize + 'px';
+  nameEl.style.color = nameColor;
 
   const handleEl = document.getElementById('display-handle');
   handleEl.textContent = handle;
   handleEl.style.fontSize = sizes.handleSize + 'px';
+  handleEl.style.color = handleColor;
 
   const titleEl = document.getElementById('display-title');
   titleEl.innerHTML = parseMarkdown(title);
@@ -1144,6 +1429,7 @@ function liveUpdate(){
   titleEl.style.fontSize = sizes.titleSize + 'px';
   titleEl.style.marginBottom = '10px';
   titleEl.style.lineHeight = '1.3';
+  titleEl.style.color = headlineColor;
 
   const bodyEl = document.getElementById('display-body');
   bodyEl.innerHTML = '';
@@ -1151,6 +1437,7 @@ function liveUpdate(){
     const p=document.createElement('p');
     p.innerHTML = parseMarkdown(line);
     p.style.fontSize = sizes.bodySize + 'px';
+    p.style.color = bodyColor;
     bodyEl.appendChild(p);
   });
 
@@ -1164,13 +1451,19 @@ function liveUpdate(){
 
   // Avatar
   if(!avatarDataURL)
-    avatarEl.src = makeInitialsAvatar(name, textCol, bg, sizes.avatarSize);
+    avatarEl.src = makeInitialsAvatar(name, nameColor, bg, sizes.avatarSize);
 
   // Image slots
   const slotTop    = document.getElementById('img-slot-top');
   const slotBottom = document.getElementById('img-slot-bottom');
-  slotTop.style.display    = imgPosition==='top'    ? 'block' : 'none';
-  slotBottom.style.display = imgPosition==='bottom' ? 'block' : 'none';
+
+  if (!showImg) {
+    slotTop.style.display = 'none';
+    slotBottom.style.display = 'none';
+  } else {
+    slotTop.style.display    = imgPosition==='top'    ? 'block' : 'none';
+    slotBottom.style.display = imgPosition==='bottom' ? 'block' : 'none';
+  }
 
   // Compute image height from card width & ratio
   const cardW = card.offsetWidth || sizes.width;
