@@ -1,0 +1,22 @@
+[    1629ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://localhost:8765/favicon.ico:0
+[  102279ms] [ERROR] Error inlining remote css file SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:14656
+    at Array.forEach (<anonymous>)
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:14609
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:1505
+    at Object.next (https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:1610)
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:526
+    at new Promise (<anonymous>)
+    at e (https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:271)
+    at $ (https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:14522)
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:16032 @ https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:0
+[  102830ms] [ERROR] Error loading remote stylesheet SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:15296
+    at Array.forEach (<anonymous>)
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:15258
+    at async Promise.all (index 0) @ https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:0
+[  102831ms] [ERROR] Error while reading CSS rules from https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap SecurityError: Failed to read the 'cssRules' property from 'CSSStyleSheet': Cannot access rules
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:15538
+    at Array.forEach (<anonymous>)
+    at https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:1:15491 @ https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js:0
+[  102838ms] [ERROR] Event @ http://localhost:8765/mockly.html:571
