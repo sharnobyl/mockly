@@ -106,7 +106,121 @@ select option { background:#2d2d2d; }
 .slider-group label { display:flex; justify-content:space-between; align-items:center; }
 .slider-group label span { color:var(--text); }
 input[type=range] { width:100%; accent-color:var(--accent); margin-top:4px; display:block; }
-.color-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+
+/* Custom Color Picker */
+.color-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; position:relative; }
+.color-trigger {
+  width:32px; height:32px; border:1px solid var(--border);
+  border-radius:6px; cursor:pointer; flex-shrink:0;
+  position:relative; overflow:hidden;
+}
+.color-trigger-bg {
+  position:absolute; inset:0;
+  background:repeating-conic-gradient(#3d3d3d 0% 25%,#4a4a4a 0% 50%) 0 0/8px 8px;
+}
+.color-trigger-color { position:absolute; inset:0; }
+.color-trigger:hover { border-color:var(--accent); }
+
+.color-picker-popup {
+  position:absolute; left:0; top:100%; margin-top:4px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; padding:12px; z-index:1000;
+  width:240px; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  display:none;
+}
+.color-picker-popup.open { display:block; }
+
+.color-spectrum {
+  width:100%; height:120px; border-radius:4px; position:relative;
+  cursor:crosshair; margin-bottom:8px;
+  background:linear-gradient(to right,#fff,currentColor);
+}
+.color-spectrum::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(to top,#000,transparent);
+  border-radius:4px;
+}
+.color-spectrum-pointer {
+  position:absolute; width:14px; height:14px;
+  border:2px solid #fff; border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 1px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.3);
+  pointer-events:none; z-index:1;
+}
+
+.color-hue-slider {
+  width:100%; height:12px; border-radius:6px;
+  background:linear-gradient(to right,
+    hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),
+    hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%));
+  position:relative; cursor:crosshair; margin-bottom:12px;
+}
+.color-hue-pointer {
+  position:absolute; top:-2px; width:6px; height:16px;
+  background:#fff; border-radius:2px;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+  transform:translateX(-50%);
+}
+
+.color-inputs {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+  margin-bottom:10px;
+}
+.color-input-group { display:flex; flex-direction:column; gap:2px; }
+.color-input-group label {
+  font-size:9px; color:var(--muted); text-transform:uppercase;
+  letter-spacing:0.5px; margin:0;
+}
+.color-input-group input {
+  margin:0; padding:5px 6px; font-size:11px; text-align:center;
+  font-family:'Courier New',monospace;
+}
+.color-hex-input {
+  display:flex; align-items:center; gap:6px; margin-bottom:12px;
+}
+.color-hex-input label {
+  font-size:10px; color:var(--muted); margin:0; font-weight:600;
+}
+.color-hex-input input {
+  flex:1; margin:0; padding:5px 8px; font-size:12px;
+  font-family:'Courier New',monospace;
+}
+
+.saved-colors { border-top:1px solid var(--border); padding-top:10px; }
+.saved-colors-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:8px;
+}
+.saved-colors-header span {
+  font-size:10px; color:var(--muted); text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.save-color-btn {
+  width:20px; height:20px; border:1px solid var(--border);
+  border-radius:4px; background:var(--bg); color:var(--muted);
+  font-size:14px; cursor:pointer; display:flex;
+  align-items:center; justify-content:center;
+  transition:all .12s;
+}
+.save-color-btn:hover { border-color:var(--accent); color:var(--accent); }
+.saved-colors-list {
+  display:flex; flex-wrap:wrap; gap:4px;
+}
+.saved-color-swatch {
+  width:22px; height:22px; border-radius:4px; cursor:pointer;
+  border:1px solid var(--border);
+  position:relative;
+}
+.saved-color-swatch:hover { border-color:var(--accent); }
+.saved-color-swatch .delete-btn {
+  position:absolute; top:-4px; right:-4px;
+  width:12px; height:12px; border-radius:50%;
+  background:#ff4757; color:#fff; font-size:8px;
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.saved-color-swatch:hover .delete-btn { display:flex; }
+
 input[type=color] {
   width:32px; height:32px; border:1px solid var(--border);
   border-radius:6px; background:none; cursor:pointer; padding:2px; flex-shrink:0;
@@ -368,14 +482,114 @@ It can blast air, adjust lights, or even take control of the wheel.</textarea>
 
   <div class="sec">Style</div>
   <div class="color-row">
-    <input type="color" id="bg-color" value="#2d49b8" oninput="liveUpdate()">
+    <div class="color-trigger" id="bg-trigger" onclick="toggleColorPicker('bg')">
+      <div class="color-trigger-bg"></div>
+      <div class="color-trigger-color" id="bg-trigger-color"></div>
+    </div>
     <label style="margin:0;flex:1">Background</label>
     <button class="stepper-btn reset" onclick="resetValue('bgColor')">↺</button>
+    <div class="color-picker-popup" id="bg-picker">
+      <div class="color-spectrum" id="bg-spectrum">
+        <div class="color-spectrum-pointer" id="bg-spectrum-pointer"></div>
+      </div>
+      <div class="color-hue-slider" id="bg-hue">
+        <div class="color-hue-pointer" id="bg-hue-pointer"></div>
+      </div>
+      <div class="color-hex-input">
+        <label>HEX</label>
+        <input type="text" id="bg-hex" maxlength="7">
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>R</label>
+          <input type="number" id="bg-r" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>G</label>
+          <input type="number" id="bg-g" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>B</label>
+          <input type="number" id="bg-b" min="0" max="255">
+        </div>
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>H</label>
+          <input type="number" id="bg-h" min="0" max="360">
+        </div>
+        <div class="color-input-group">
+          <label>S</label>
+          <input type="number" id="bg-s" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>L</label>
+          <input type="number" id="bg-l" min="0" max="100">
+        </div>
+      </div>
+      <div class="saved-colors">
+        <div class="saved-colors-header">
+          <span>Saved Colors</span>
+          <button class="save-color-btn" onclick="saveColor('bg')">+</button>
+        </div>
+        <div class="saved-colors-list" id="bg-saved-list"></div>
+      </div>
+    </div>
   </div>
   <div class="color-row">
-    <input type="color" id="text-color" value="#ffffff" oninput="liveUpdate()">
+    <div class="color-trigger" id="text-trigger" onclick="toggleColorPicker('text')">
+      <div class="color-trigger-bg"></div>
+      <div class="color-trigger-color" id="text-trigger-color"></div>
+    </div>
     <label style="margin:0;flex:1">Text color</label>
     <button class="stepper-btn reset" onclick="resetValue('textColor')">↺</button>
+    <div class="color-picker-popup" id="text-picker">
+      <div class="color-spectrum" id="text-spectrum">
+        <div class="color-spectrum-pointer" id="text-spectrum-pointer"></div>
+      </div>
+      <div class="color-hue-slider" id="text-hue">
+        <div class="color-hue-pointer" id="text-hue-pointer"></div>
+      </div>
+      <div class="color-hex-input">
+        <label>HEX</label>
+        <input type="text" id="text-hex" maxlength="7">
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>R</label>
+          <input type="number" id="text-r" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>G</label>
+          <input type="number" id="text-g" min="0" max="255">
+        </div>
+        <div class="color-input-group">
+          <label>B</label>
+          <input type="number" id="text-b" min="0" max="255">
+        </div>
+      </div>
+      <div class="color-inputs">
+        <div class="color-input-group">
+          <label>H</label>
+          <input type="number" id="text-h" min="0" max="360">
+        </div>
+        <div class="color-input-group">
+          <label>S</label>
+          <input type="number" id="text-s" min="0" max="100">
+        </div>
+        <div class="color-input-group">
+          <label>L</label>
+          <input type="number" id="text-l" min="0" max="100">
+        </div>
+      </div>
+      <div class="saved-colors">
+        <div class="saved-colors-header">
+          <span>Saved Colors</span>
+          <button class="save-color-btn" onclick="saveColor('text')">+</button>
+        </div>
+        <div class="saved-colors-list" id="text-saved-list"></div>
+      </div>
+    </div>
   </div>
   <label>Font</label>
   <select id="font-select" onchange="liveUpdate()">
@@ -512,6 +726,269 @@ const LIMITS = {
 function gv(id){ return document.getElementById(id).value; }
 function ratioNum(r){ const [a,b]=r.split('/').map(Number); return a/b; }
 
+// ============ COLOR PICKER ============
+const colorPickerState = {
+  bg: { hex: '#2d49b8', h: 227, s: 60, l: 45 },
+  text: { hex: '#ffffff', h: 0, s: 0, l: 100 }
+};
+
+// Color conversion utilities
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 0, b: 0 };
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(x => {
+    const hex = Math.round(Math.max(0, Math.min(255, x))).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+}
+
+function hslToRgb(h, s, l) {
+  h /= 360; s /= 100; l /= 100;
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) {
+    h = s = 0;
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function hsvToHsl(h, s, v) {
+  s /= 100; v /= 100;
+  const l = (2 - s) * v / 2;
+  const sOut = l && l < 1 ? s * v / (l < 0.5 ? l * 2 : 2 - l * 2) : s;
+  return { h: h, s: Math.round(sOut * 100), l: Math.round(l * 100) };
+}
+
+function hslToHsv(h, s, l) {
+  s /= 100; l /= 100;
+  const v = l + s * Math.min(l, 1 - l);
+  const sOut = v ? 2 * (1 - l / v) : 0;
+  return { h: h, s: Math.round(sOut * 100), v: Math.round(v * 100) };
+}
+
+function updateColorPickerUI(prefix) {
+  const state = colorPickerState[prefix];
+  const rgb = hslToRgb(state.h, state.s, state.l);
+  const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+  state.hex = hex;
+
+  // Update trigger swatch
+  document.getElementById(`${prefix}-trigger-color`).style.background = hex;
+
+  // Update spectrum background (hue)
+  document.getElementById(`${prefix}-spectrum`).style.color = `hsl(${state.h}, 100%, 50%)`;
+
+  // Update spectrum pointer position
+  const hsv = hslToHsv(state.h, state.s, state.l);
+  const spectrum = document.getElementById(`${prefix}-spectrum`);
+  const pointer = document.getElementById(`${prefix}-spectrum-pointer`);
+  pointer.style.left = `${hsv.s}%`;
+  pointer.style.top = `${100 - hsv.v}%`;
+
+  // Update hue pointer
+  document.getElementById(`${prefix}-hue-pointer`).style.left = `${(state.h / 360) * 100}%`;
+
+  // Update inputs
+  document.getElementById(`${prefix}-hex`).value = hex;
+  document.getElementById(`${prefix}-r`).value = rgb.r;
+  document.getElementById(`${prefix}-g`).value = rgb.g;
+  document.getElementById(`${prefix}-b`).value = rgb.b;
+  document.getElementById(`${prefix}-h`).value = state.h;
+  document.getElementById(`${prefix}-s`).value = state.s;
+  document.getElementById(`${prefix}-l`).value = state.l;
+}
+
+function setColorFromHSL(prefix, h, s, l) {
+  colorPickerState[prefix].h = h;
+  colorPickerState[prefix].s = s;
+  colorPickerState[prefix].l = l;
+  updateColorPickerUI(prefix);
+  liveUpdate();
+}
+
+function setColorFromHex(prefix, hex) {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
+  const rgb = hexToRgb(hex);
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+  colorPickerState[prefix].h = hsl.h;
+  colorPickerState[prefix].s = hsl.s;
+  colorPickerState[prefix].l = hsl.l;
+  updateColorPickerUI(prefix);
+  liveUpdate();
+}
+
+function getPickerColor(prefix) {
+  return colorPickerState[prefix].hex;
+}
+
+function toggleColorPicker(prefix) {
+  const popup = document.getElementById(`${prefix}-picker`);
+  const isOpen = popup.classList.contains('open');
+  // Close all pickers
+  document.querySelectorAll('.color-picker-popup').forEach(p => p.classList.remove('open'));
+  if (!isOpen) {
+    popup.classList.add('open');
+  }
+}
+
+// Saved colors with localStorage
+function getSavedColors() {
+  try {
+    return JSON.parse(localStorage.getItem('mocklySavedColors')) || [];
+  } catch { return []; }
+}
+
+function saveColorToStorage(hex) {
+  const colors = getSavedColors();
+  if (!colors.includes(hex)) {
+    colors.unshift(hex);
+    if (colors.length > 16) colors.pop();
+    localStorage.setItem('mocklySavedColors', JSON.stringify(colors));
+  }
+  renderSavedColors();
+}
+
+function deleteSavedColor(hex) {
+  const colors = getSavedColors().filter(c => c !== hex);
+  localStorage.setItem('mocklySavedColors', JSON.stringify(colors));
+  renderSavedColors();
+}
+
+function renderSavedColors() {
+  const colors = getSavedColors();
+  ['bg', 'text'].forEach(prefix => {
+    const list = document.getElementById(`${prefix}-saved-list`);
+    list.innerHTML = colors.map(c => `
+      <div class="saved-color-swatch" style="background:${c}" onclick="applySavedColor('${prefix}', '${c}')" title="${c}">
+        <div class="delete-btn" onclick="event.stopPropagation(); deleteSavedColor('${c}')">×</div>
+      </div>
+    `).join('');
+  });
+}
+
+function saveColor(prefix) {
+  saveColorToStorage(colorPickerState[prefix].hex);
+}
+
+function applySavedColor(prefix, hex) {
+  setColorFromHex(prefix, hex);
+}
+
+// Spectrum and hue interactions
+function setupColorPickerInteractions(prefix) {
+  const spectrum = document.getElementById(`${prefix}-spectrum`);
+  const hue = document.getElementById(`${prefix}-hue`);
+
+  let isDraggingSpectrum = false;
+  let isDraggingHue = false;
+
+  function handleSpectrumMove(e) {
+    const rect = spectrum.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    const hsv = hslToHsv(colorPickerState[prefix].h, colorPickerState[prefix].s, colorPickerState[prefix].l);
+    const hsl = hsvToHsl(colorPickerState[prefix].h, x * 100, (1 - y) * 100);
+    setColorFromHSL(prefix, colorPickerState[prefix].h, hsl.s, hsl.l);
+  }
+
+  function handleHueMove(e) {
+    const rect = hue.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const h = Math.round(x * 360);
+    const state = colorPickerState[prefix];
+    setColorFromHSL(prefix, h, state.s, state.l);
+  }
+
+  spectrum.addEventListener('mousedown', e => { isDraggingSpectrum = true; handleSpectrumMove(e); });
+  hue.addEventListener('mousedown', e => { isDraggingHue = true; handleHueMove(e); });
+
+  document.addEventListener('mousemove', e => {
+    if (isDraggingSpectrum) handleSpectrumMove(e);
+    if (isDraggingHue) handleHueMove(e);
+  });
+  document.addEventListener('mouseup', () => { isDraggingSpectrum = false; isDraggingHue = false; });
+
+  // Input handlers
+  document.getElementById(`${prefix}-hex`).addEventListener('input', e => {
+    let val = e.target.value;
+    if (!val.startsWith('#')) val = '#' + val;
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) setColorFromHex(prefix, val);
+  });
+
+  ['r', 'g', 'b'].forEach(ch => {
+    document.getElementById(`${prefix}-${ch}`).addEventListener('input', e => {
+      const r = parseInt(document.getElementById(`${prefix}-r`).value) || 0;
+      const g = parseInt(document.getElementById(`${prefix}-g`).value) || 0;
+      const b = parseInt(document.getElementById(`${prefix}-b`).value) || 0;
+      const hsl = rgbToHsl(r, g, b);
+      setColorFromHSL(prefix, hsl.h, hsl.s, hsl.l);
+    });
+  });
+
+  ['h', 's', 'l'].forEach(ch => {
+    document.getElementById(`${prefix}-${ch}`).addEventListener('input', e => {
+      const h = parseInt(document.getElementById(`${prefix}-h`).value) || 0;
+      const s = parseInt(document.getElementById(`${prefix}-s`).value) || 0;
+      const l = parseInt(document.getElementById(`${prefix}-l`).value) || 0;
+      setColorFromHSL(prefix, h, s, l);
+    });
+  });
+}
+
+// Close pickers when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.color-row')) {
+    document.querySelectorAll('.color-picker-popup').forEach(p => p.classList.remove('open'));
+  }
+});
+
+function initColorPickers() {
+  ['bg', 'text'].forEach(prefix => {
+    setupColorPickerInteractions(prefix);
+    updateColorPickerUI(prefix);
+  });
+  renderSavedColors();
+}
+// ============ END COLOR PICKER ============
+
 // Stepper functions
 function adjustValue(key, delta) {
   const limit = LIMITS[key];
@@ -523,13 +1000,11 @@ function adjustValue(key, delta) {
 
 function resetValue(key) {
   if (key === 'bgColor') {
-    document.getElementById('bg-color').value = DEFAULTS.bgColor;
-    liveUpdate();
+    setColorFromHex('bg', DEFAULTS.bgColor);
     return;
   }
   if (key === 'textColor') {
-    document.getElementById('text-color').value = DEFAULTS.textColor;
-    liveUpdate();
+    setColorFromHex('text', DEFAULTS.textColor);
     return;
   }
   sizes[key] = DEFAULTS[key];
@@ -618,8 +1093,8 @@ function makeInitialsAvatar(name, fg, bg, size){
 
 // Live update
 function liveUpdate(){
-  const bg       = gv('bg-color');
-  const textCol  = gv('text-color');
+  const bg       = getPickerColor('bg');
+  const textCol  = getPickerColor('text');
   const fontKey  = gv('font-select');
   const verified = gv('verified-select');
   const rounded  = document.getElementById('rounded-img-check').checked;
@@ -882,6 +1357,7 @@ async function copyCard(){
 })();
 
 document.getElementById('card').style.width = sizes.width + 'px';
+initColorPickers();
 liveUpdate();
 </script>
 </body>
