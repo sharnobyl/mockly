@@ -358,8 +358,17 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
     overflow: hidden;
     width: 100%;
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  .zoom-controls {
+    transform-origin: center;
+  }
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -1496,16 +1505,28 @@ function makeInitialsAvatar(name, fg, bg, size){
 function scaleCardForMobile() {
   const card = document.getElementById('card');
   const previewArea = document.querySelector('.preview-area');
+  const zoomControls = document.getElementById('zoom-controls');
+
   if (window.innerWidth <= 768) {
     const availableWidth = previewArea.clientWidth - 32;
     const cardWidth = card.offsetWidth;
     const scale = Math.min(1, availableWidth / cardWidth);
     card.style.transform = `scale(${scale})`;
     card.style.transformOrigin = 'top center';
-    // Fix: Set preview area height to scaled card height
-    previewArea.style.height = (card.offsetHeight * scale) + 32 + 'px';
+
+    // Collapse the "ghost" space from transform - card visually shrinks but DOM box stays full size
+    // Add negative margin to compensate for the unused vertical space
+    card.style.marginBottom = -(card.offsetHeight * (1 - scale)) + 'px';
+
+    // Calculate preview area height: scaled card + padding (16px top + 16px bottom) + gap + zoom controls
+    const zoomControlsHeight = (zoomControls && zoomControls.style.display !== 'none')
+      ? zoomControls.offsetHeight + 12 // 12px gap
+      : 0;
+    previewArea.style.height = (card.offsetHeight * scale) + 32 + zoomControlsHeight + 'px';
+
   } else {
     card.style.transform = '';
+    card.style.marginBottom = '';
     previewArea.style.height = '';
   }
 }
@@ -1776,26 +1797,23 @@ let dragStartY = 0;
 let dragStartOffsetX = 0;
 let dragStartOffsetY = 0;
 
-function setupImageDrag(imgEl) {
-  if (!imgEl) return;
+function handleDragStart(clientX, clientY) {
+  if (imgFit !== 'cover' || !cardImgDataURL) return false;
+  isDraggingImg = true;
+  dragStartX = clientX;
+  dragStartY = clientY;
+  dragStartOffsetX = imgOffsetX;
+  dragStartOffsetY = imgOffsetY;
 
-  imgEl.addEventListener('mousedown', (e) => {
-    if (imgFit !== 'cover' || !cardImgDataURL) return;
-    e.preventDefault();
-    isDraggingImg = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragStartOffsetX = imgOffsetX;
-    dragStartOffsetY = imgOffsetY;
-    imgEl.classList.add('dragging');
-  });
+  const activeImg = imgPosition === 'top'
+    ? document.getElementById('img-top')
+    : document.getElementById('img-bottom');
+  if (activeImg) activeImg.classList.add('dragging');
+
+  return true;
 }
 
-// Setup drag for both image slots
-setupImageDrag(document.getElementById('img-top'));
-setupImageDrag(document.getElementById('img-bottom'));
-
-document.addEventListener('mousemove', (e) => {
+function handleDragMove(clientX, clientY) {
   if (!isDraggingImg) return;
 
   const activeSlot = imgPosition === 'top'
@@ -1805,8 +1823,8 @@ document.addEventListener('mousemove', (e) => {
   if (!activeSlot) return;
 
   // Calculate pixel delta and adjust for zoom level
-  const deltaX = (e.clientX - dragStartX) / imgZoom;
-  const deltaY = (e.clientY - dragStartY) / imgZoom;
+  const deltaX = (clientX - dragStartX) / imgZoom;
+  const deltaY = (clientY - dragStartY) / imgZoom;
 
   // Calculate max offset to prevent dragging image out of view
   // At zoom = 1, maxOffset = 0 (can't pan)
@@ -1825,15 +1843,57 @@ document.addEventListener('mousemove', (e) => {
   if (activeImg) {
     activeImg.style.transform = `scale(${imgZoom}) translate(${imgOffsetX}px, ${imgOffsetY}px)`;
   }
-});
+}
 
-document.addEventListener('mouseup', () => {
+function handleDragEnd() {
   if (isDraggingImg) {
     isDraggingImg = false;
     document.querySelectorAll('.img-wrap img').forEach(img => img.classList.remove('dragging'));
     saveState();
   }
+}
+
+function setupImageDrag(imgEl) {
+  if (!imgEl) return;
+
+  // Mouse events
+  imgEl.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    handleDragStart(e.clientX, e.clientY);
+  });
+
+  // Touch events
+  imgEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+}
+
+// Setup drag for both image slots
+setupImageDrag(document.getElementById('img-top'));
+setupImageDrag(document.getElementById('img-bottom'));
+
+// Mouse move/up on document
+document.addEventListener('mousemove', (e) => {
+  handleDragMove(e.clientX, e.clientY);
 });
+
+document.addEventListener('mouseup', handleDragEnd);
+
+// Touch move/end on document
+document.addEventListener('touchmove', (e) => {
+  if (isDraggingImg && e.touches.length === 1) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handleDragMove(touch.clientX, touch.clientY);
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', handleDragEnd);
+document.addEventListener('touchcancel', handleDragEnd);
 
 // File handlers
 function handleAvatar(e){
