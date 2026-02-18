@@ -2028,7 +2028,9 @@ function saveState() {
       fit: imgFit,
       offsetX: imgOffsetX,
       offsetY: imgOffsetY,
-      zoom: imgZoom
+      zoom: imgZoom,
+      naturalW: imgNaturalW,
+      naturalH: imgNaturalH
     },
     sliders: {
       inset: gv('inset-range'),
@@ -2088,6 +2090,8 @@ function restoreState() {
       imgOffsetX = state.images.offsetX ?? 0;
       imgOffsetY = state.images.offsetY ?? 0;
       imgZoom = state.images.zoom ?? 1;
+      imgNaturalW = state.images.naturalW ?? 0;
+      imgNaturalH = state.images.naturalH ?? 0;
 
       if (avatarDataURL) {
         document.getElementById('avatar-display').src = avatarDataURL;
