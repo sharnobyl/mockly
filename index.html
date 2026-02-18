@@ -1039,6 +1039,8 @@ let imgFit         = 'cover';
 let imgOffsetX     = 0; // pixels for translate
 let imgOffsetY     = 0; // pixels for translate
 let imgZoom        = 1;  // scale factor (1 = 100%)
+let imgNaturalW    = 0;  // natural width of uploaded image
+let imgNaturalH    = 0;  // natural height of uploaded image
 
 const PLATFORM_PRESETS = {
   twitter:   { w: 516, h: 0 },
@@ -1914,9 +1916,18 @@ function handleCardImage(e){
   const r=new FileReader();
   r.onload=ev=>{
     cardImgDataURL=ev.target.result;
+
+    // Load image to get natural dimensions
+    const img = new Image();
+    img.onload = () => {
+      imgNaturalW = img.naturalWidth;
+      imgNaturalH = img.naturalHeight;
+      liveUpdate();
+    };
+    img.src = cardImgDataURL;
+
     const b=document.getElementById('card-img-btn');
     b.textContent='✓ '+file.name; b.classList.add('has-file');
-    liveUpdate();
   };
   r.readAsDataURL(file);
 }
