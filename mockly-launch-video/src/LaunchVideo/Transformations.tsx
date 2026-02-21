@@ -1,66 +1,42 @@
 import {
   AbsoluteFill,
   interpolate,
-  spring,
   useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
 import { SocialCard } from "../components/SocialCard";
-
-const PRESETS = [
-  { name: "Twitter", width: 280, height: "auto" as const, label: "Twitter/X" },
-  { name: "Instagram", width: 200, height: 200, label: "Instagram" },
-  { name: "LinkedIn", width: 320, height: "auto" as const, label: "LinkedIn" },
-  { name: "Story", width: 140, height: 250, label: "Story" },
-  { name: "OG", width: 360, height: 188, label: "OG Image" },
-];
+import { COLORS, FONTS, getCatImageUrl } from "../constants";
 
 export const Transformations: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
 
-  // Phase 1: Color shift (0-60 local frames)
-  const bgHue = interpolate(
-    frame,
-    [0, 30, 60],
-    [0, 220, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-  const bgColor = frame < 60
-    ? `hsl(${bgHue}, 50%, 5%)`
-    : "#000000";
+  // Each color lasts ~25 frames (180 frames / 7 colors ≈ 25)
+  const colorDuration = 25;
+  const colorCount = COLORS.length;
 
-  // Phase 2: Text changes (60-100 local frames)
-  const textPhase = interpolate(frame, [60, 80], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // Calculate current color index (cycle through colors)
+  const colorProgress = frame / colorDuration;
+  const colorIndex = Math.floor(colorProgress) % colorCount;
+  const nextColorIndex = (colorIndex + 1) % colorCount;
 
-  const headline = textPhase > 0.5
-    ? "Customize everything"
-    : "Create beautiful social cards";
+  // Interpolation progress within current color
+  const colorBlend = colorProgress % 1;
 
-  const body = textPhase > 0.5
-    ? "Colors, fonts, images - make it yours."
-    : "Design Twitter/X-style social cards in seconds.";
+  // Get current and next colors
+  const currentColor = COLORS[colorIndex];
+  const nextColor = COLORS[nextColorIndex];
 
-  // Phase 3: Image appears (100-120 local frames)
-  const showImage = frame >= 100;
+  // Cycle fonts every 45 frames
+  const fontDuration = 45;
+  const fontIndex = Math.floor(frame / fontDuration) % FONTS.length;
+  const nextFontIndex = (fontIndex + 1) % FONTS.length;
+  const fontBlend = (frame / fontDuration) % 1;
 
-  // Phase 4: Split to presets (120-180 local frames)
-  const splitProgress = spring({
-    frame: frame - 120,
-    fps,
-    config: { damping: 15, stiffness: 80 },
-  });
+  // Use current font (fonts don't blend well, so switch at midpoint)
+  const currentFont = fontBlend < 0.5 ? FONTS[fontIndex] : FONTS[nextFontIndex];
 
-  const showSplit = frame >= 120;
-
-  // Single card position (before split)
-  const singleCardX = interpolate(splitProgress, [0, 1], [0, -600], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  // Cat image changes every 30 frames
+  const imageId = Math.floor(frame / 30) + 1;
+  const imageUrl = getCatImageUrl(imageId);
 
   return (
     <AbsoluteFill
@@ -70,84 +46,23 @@ export const Transformations: React.FC = () => {
         alignItems: "center",
       }}
     >
-      {!showSplit ? (
-        // Single transforming card
-        <div style={{ transform: `translateX(${singleCardX}px)` }}>
-          <SocialCard
-            name="Mockly"
-            handle="@mockly.app"
-            headline={headline}
-            body={body}
-            bgColor={bgColor}
-            showImage={showImage}
-            width={420}
-            animated={false}
-            scale={0.85}
-          />
-        </div>
-      ) : (
-        // Split into presets
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 20,
-            transform: `scale(${0.55})`,
-          }}
-        >
-          {PRESETS.map((preset, index) => {
-            const delay = index * 5;
-            const cardScale = spring({
-              frame: frame - 120 - delay,
-              fps,
-              config: { damping: 12, stiffness: 100 },
-            });
-
-            const labelOpacity = interpolate(
-              frame,
-              [150 + delay, 165 + delay],
-              [0, 1],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-            );
-
-            return (
-              <div
-                key={preset.name}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 12,
-                  transform: `scale(${cardScale})`,
-                }}
-              >
-                <SocialCard
-                  name="Mockly"
-                  handle="@mockly.app"
-                  headline="Perfect for every platform"
-                  body="Export in any size."
-                  width={preset.width}
-                  height={preset.height === "auto" ? undefined : preset.height}
-                  showImage={true}
-                  animated={false}
-                />
-                <span
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#8c8c8c",
-                    opacity: labelOpacity,
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  {preset.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <SocialCard
+        name="Mockly"
+        handle="@mockly.app"
+        headline="Create beautiful social cards"
+        body="Design stunning cards with custom colors and fonts."
+        bgColor={currentColor.bg}
+        nameColor={currentColor.text}
+        handleColor={currentColor.handle}
+        headlineColor={currentColor.text}
+        bodyColor={currentColor.text}
+        showImage={true}
+        imageUrl={imageUrl}
+        width={420}
+        animated={false}
+        scale={0.85}
+        fontFamily={currentFont}
+      />
     </AbsoluteFill>
   );
 };
