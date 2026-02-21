@@ -6,7 +6,12 @@ import {
   useVideoConfig,
 } from "remotion";
 
-export const CTA: React.FC = () => {
+interface CTAProps {
+  children?: React.ReactNode;
+  showBlur?: boolean;
+}
+
+export const CTA: React.FC<CTAProps> = ({ children, showBlur = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -16,7 +21,7 @@ export const CTA: React.FC = () => {
     config: { damping: 12, stiffness: 100 },
   });
 
-  const opacity = interpolate(frame, [0, 10], [0, 1], {
+  const opacity = interpolate(frame, [0, 15], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -27,16 +32,20 @@ export const CTA: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: "#1e1e1e",
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: showBlur ? "transparent" : "#1e1e1e",
       }}
     >
+      {children}
+
       <div
         style={{
           textAlign: "center",
           transform: `scale(${scale * pulse})`,
           opacity,
+          position: "relative",
+          zIndex: 10,
         }}
       >
         {/* Try it free */}
