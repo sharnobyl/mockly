@@ -46,10 +46,6 @@ export const Transformations: React.FC = () => {
 
   // Phase 3: Image appears (100-120 local frames)
   const showImage = frame >= 100;
-  const imageOpacity = interpolate(frame, [100, 120], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
 
   // Phase 4: Split to presets (120-180 local frames)
   const splitProgress = spring({

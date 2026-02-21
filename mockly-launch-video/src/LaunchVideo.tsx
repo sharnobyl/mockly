@@ -2,7 +2,6 @@ import { zColor } from "@remotion/zod-types";
 import {
   AbsoluteFill,
   Sequence,
-  useCurrentFrame,
 } from "remotion";
 import { z } from "zod";
 import { Intro } from "./LaunchVideo/Intro";
@@ -22,8 +21,6 @@ export const LaunchVideo: React.FC<z.infer<typeof launchVideoSchema>> = ({
   accentColor = "#2d49b9",
   backgroundColor = "#1e1e1e",
 }) => {
-  const frame = useCurrentFrame();
-
   return (
     <AbsoluteFill style={{ backgroundColor }}>
       {/* Scene 1: Intro (0-90 frames = 0-3s) */}
