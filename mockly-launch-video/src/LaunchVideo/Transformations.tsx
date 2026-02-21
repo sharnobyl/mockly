@@ -1,6 +1,5 @@
 import {
   AbsoluteFill,
-  interpolate,
   useCurrentFrame,
 } from "remotion";
 import { SocialCard } from "../components/SocialCard";
@@ -16,14 +15,9 @@ export const Transformations: React.FC = () => {
   // Calculate current color index (cycle through colors)
   const colorProgress = frame / colorDuration;
   const colorIndex = Math.floor(colorProgress) % colorCount;
-  const nextColorIndex = (colorIndex + 1) % colorCount;
 
-  // Interpolation progress within current color
-  const colorBlend = colorProgress % 1;
-
-  // Get current and next colors
+  // Get current color
   const currentColor = COLORS[colorIndex];
-  const nextColor = COLORS[nextColorIndex];
 
   // Cycle fonts every 45 frames
   const fontDuration = 45;

@@ -1,6 +1,5 @@
 import {
   AbsoluteFill,
-  interpolate,
   useCurrentFrame,
 } from "remotion";
 import { SocialCard } from "../components/SocialCard";
