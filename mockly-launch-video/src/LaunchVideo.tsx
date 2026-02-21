@@ -7,7 +7,8 @@ import { z } from "zod";
 import { Intro } from "./LaunchVideo/Intro";
 import { CardReveal } from "./LaunchVideo/CardReveal";
 import { Transformations } from "./LaunchVideo/Transformations";
-import { ExportShowcase } from "./LaunchVideo/ExportShowcase";
+import { ScrollingCards } from "./LaunchVideo/ScrollingCards";
+import { SocialShowcase } from "./LaunchVideo/SocialShowcase";
 import { CTA } from "./LaunchVideo/CTA";
 
 export const launchVideoSchema = z.object({
@@ -33,19 +34,26 @@ export const LaunchVideo: React.FC<z.infer<typeof launchVideoSchema>> = ({
         <CardReveal />
       </Sequence>
 
-      {/* Scene 3: Transformations (180-360 frames = 6-12s) */}
+      {/* Scene 3: Color/Font Cycle (180-360 frames = 6-12s) */}
       <Sequence from={180} durationInFrames={180}>
         <Transformations />
       </Sequence>
 
-      {/* Scene 4: Export Showcase (360-510 frames = 12-17s) */}
-      <Sequence from={360} durationInFrames={150}>
-        <ExportShowcase />
+      {/* Scene 4: Scrolling Cards (360-540 frames = 12-18s) */}
+      <Sequence from={360} durationInFrames={180}>
+        <ScrollingCards />
       </Sequence>
 
-      {/* Scene 5: CTA (510-540 frames = 17-18s) */}
-      <Sequence from={510} durationInFrames={30}>
-        <CTA />
+      {/* Scene 5: Social Showcase (360-510 frames = 12-17s) - overlaps with ScrollingCards */}
+      <Sequence from={360} durationInFrames={150}>
+        <SocialShowcase />
+      </Sequence>
+
+      {/* Scene 6: CTA (480-540 frames = 16-18s) - over blurred ScrollingCards */}
+      <Sequence from={480} durationInFrames={60}>
+        <CTA>
+          <ScrollingCards />
+        </CTA>
       </Sequence>
     </AbsoluteFill>
   );
