@@ -19,6 +19,9 @@ interface SocialCardProps {
   verifiedColor?: string;
   animated?: boolean;
   scale?: number;
+  inset?: number;
+  imageAspectRatio?: number;
+  fontFamily?: string;
 }
 
 export const SocialCard: React.FC<SocialCardProps> = ({
@@ -40,6 +43,9 @@ export const SocialCard: React.FC<SocialCardProps> = ({
   verifiedColor = "#499aea",
   animated = false,
   scale = 1,
+  inset = 10,
+  imageAspectRatio = 16 / 9,
+  fontFamily = "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -69,6 +75,11 @@ export const SocialCard: React.FC<SocialCardProps> = ({
     ? interpolate(frame, [50, 65], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
     : 1;
 
+  // Calculate image dimensions like the app does
+  const imageWidth = width - inset * 2;
+  const imageHeight = Math.round(imageWidth / imageAspectRatio);
+  const imageBorderRadius = Math.max(4, Math.min(16, inset + 2));
+
   const cardStyle: React.CSSProperties = {
     width,
     height: height || "auto",
@@ -77,7 +88,7 @@ export const SocialCard: React.FC<SocialCardProps> = ({
     overflow: "hidden",
     transform: `scale(${scale})`,
     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-    fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily,
   };
 
   return (
@@ -176,19 +187,19 @@ export const SocialCard: React.FC<SocialCardProps> = ({
         </div>
       </div>
 
-      {/* Image */}
+      {/* Image - positioned like the actual app */}
       {showImage && (
         <div
           style={{
-            width: "100%",
-            height: 180,
-            backgroundColor: "#1a1a2e",
+            width: imageWidth,
+            height: imageHeight,
+            backgroundColor: imageUrl ? "transparent" : "#1a1a2e",
             opacity: imageOpacity,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 10px 10px",
-            borderRadius: 8,
+            margin: `0 ${inset}px ${inset}px`,
+            borderRadius: imageBorderRadius,
             overflow: "hidden",
           }}
         >
