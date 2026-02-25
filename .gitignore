@@ -4,3 +4,4 @@
 # Playwright logs
 .playwright-mcp/
 mockly-launch-video/
+docs/
