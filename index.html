@@ -493,6 +493,7 @@ input[type=color]::-webkit-color-swatch{border:none;border-radius:3px}
     <button class="preset-btn" data-preset="linkedin">LinkedIn</button>
     <button class="preset-btn" data-preset="story">Story</button>
     <button class="preset-btn" data-preset="og">OG Image</button>
+    <button class="preset-btn" data-preset="four5">4:5</button>
   </div>
 
   <div class="sec">Canvas Size</div>
@@ -1052,6 +1053,7 @@ const PLATFORM_PRESETS = {
   linkedin:  { w: 700, h: 0 },
   story:     { w: 400, h: 711 },
   og:        { w: 800, h: 418 },
+  four5:     { w: 600, h: 750 },
 };
 
 const FONT_CSS = {
@@ -1071,8 +1073,8 @@ const LIMITS = {
   avatarSize: { min: 24, max: 64, step: 2 },
   cornerRadius: { min: 0, max: 40, step: 1 },
   inset: { min: 0, max: 24, step: 1 },
-  width: { min: 300, max: 900, step: 10 },
-  height: { min: 0, max: 900, step: 10 }
+  width: { min: 300, max: 900, step: 1 },
+  height: { min: 0, max: 900, step: 1 }
 };
 
 function gv(id){ return document.getElementById(id).value; }
